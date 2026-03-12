@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using System;
 
 namespace QuickResult;
@@ -202,6 +203,32 @@ public static class Result
         try
         {
             return Success(func());
+        }
+        catch (Exception ex)
+        {
+            var message = string.IsNullOrWhiteSpace(ex.Message)
+                ? ex.GetType().Name : ex.Message;
+            return Failure<T>(message);
+        }
+    }
+
+    /// <summary>
+    /// Executes an asynchronous function and wraps its outcome in a <see cref="Result{T}"/>.
+    /// Returns <see cref="Result{T}.Failure(string)"/> with the thrown exception message when an exception is thrown.
+    /// </summary>
+    /// <typeparam name="T">Type of the produced value.</typeparam>
+    /// <param name="func">Asynchronous function to execute.</param>
+    /// <returns>
+    /// A task that resolves to <see cref="Result{T}.Success(T)"/> when <paramref name="func"/> succeeds;
+    /// otherwise <see cref="Result{T}.Failure(string)"/>.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="func"/> is null.</exception>
+    public static async Task<Result<T>> TryAsync<T>(Func<Task<T>> func)
+    {
+        ArgumentNullException.ThrowIfNull(func);
+        try
+        {
+            return Success(await func().ConfigureAwait(false));
         }
         catch (Exception ex)
         {

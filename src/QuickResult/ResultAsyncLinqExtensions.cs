@@ -115,4 +115,30 @@ public static class ResultAsyncLinqExtensions
             ? Result<TResult>.Failure(bound.Error)
             : Result<TResult>.Success(projector(sourceValue, bound.Value));
     }
+
+    /// <summary>
+    /// Converts a <see cref="Result{T}"/> containing a <see cref="Task{TResult}"/> into
+    /// a task of <see cref="Result{T}"/>, propagating both existing failures and thrown exceptions.
+    /// </summary>
+    /// <typeparam name="T">Type of the eventual success value.</typeparam>
+    /// <param name="source">Source result that may contain an asynchronous success value.</param>
+    /// <returns>
+    /// A task resolving to a successful result when both layers succeed;
+    /// otherwise a failure result with the propagated or exception message.
+    /// </returns>
+    public static async Task<Result<T>> Transpose<T>(this Result<Task<T>> source)
+    {
+        if (source.IsFailure) return Result.Failure<T>(source.Error);
+        try
+        {
+            var value = await source.Value.ConfigureAwait(false);
+            return Result.Success(value);
+        }
+        catch (Exception ex)
+        {
+            var message = string.IsNullOrWhiteSpace(ex.Message)
+                ? ex.GetType().Name : ex.Message;
+            return Result.Failure<T>(message);
+        }
+    }
 }
