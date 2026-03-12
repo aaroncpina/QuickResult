@@ -198,7 +198,7 @@ public sealed class Result<T>
     public Result<T> MapFailure(Func<string, string> mapper)
     {
         ArgumentNullException.ThrowIfNull(mapper);
-        return IsSuccess ? this : Result<T>.Failure(mapper(Error));
+        return IsSuccess ? this : Failure(mapper(Error));
     }
 
     /// <summary>

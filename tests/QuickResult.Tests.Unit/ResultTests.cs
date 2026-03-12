@@ -136,6 +136,34 @@ public class ResultTests
     }
 
     [Fact]
+    public async Task TryAsync_GenericTask_WhenSucceeds_ReturnsSuccess()
+    {
+        var result = await Result.TryAsync(async () =>
+        {
+            await Task.Delay(1);
+            return 42;
+        });
+
+        Assert.True(result.IsSuccess);
+        Assert.False(result.IsFailure);
+        Assert.Equal(42, result.Value);
+    }
+
+    [Fact]
+    public async Task TryAsync_GenericTask_WhenThrows_ReturnsFailure()
+    {
+        var result = await Result.TryAsync<int>(async () =>
+        {
+            await Task.Delay(1);
+            throw new InvalidOperationException("boom");
+        });
+
+        Assert.True(result.IsFailure);
+        Assert.False(result.IsSuccess);
+        Assert.Equal("boom", result.Error);
+    }
+
+    [Fact]
     public void NonGenericFactory_Failure_CreatesFailureResult()
     {
         var result = Result.Failure<int>("boom");
