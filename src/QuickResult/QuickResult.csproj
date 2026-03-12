@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+        <Nullable>enable</Nullable>
+        <LangVersion>latest</LangVersion>
+
+        <!-- Metadata -->
+        <Version>1.0.0</Version>
+        <Authors>Aaron Pina</Authors>
+        <Description>Lightweight Result monad for C# with full LINQ query syntax for both sync and async. Mix sync and async steps seamlessly in one query. Zero dependencies.</Description>
+        <PackageTags>result;monad;linq;functional;error-handling;async;csharp</PackageTags>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <RepositoryUrl>https://github.com/aaroncpina/QuickResult</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageProjectUrl>https://github.com/aaroncpina/QuickResult</PackageProjectUrl>
+
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    </PropertyGroup>
+
+</Project>
