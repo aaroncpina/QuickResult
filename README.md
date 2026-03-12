@@ -46,6 +46,7 @@ var message = result.Match(
 |---|---|
 | `Result<T>.Success(value)` | Create a successful result |
 | `Result<T>.Failure(error)` | Create a failed result |
+| `Result.FromNullable(value, error)` | Convert nullable reference/value types into `Result<T>` |
 | `IsSuccess` / `IsFailure` | Check result state |
 | `Value` | Get success value (throws on failure) |
 | `Error` | Get error message (throws on success) |
@@ -70,7 +71,17 @@ var ok = Result.Success(42);
 var fail = Result.Failure("Something went wrong");
 ```
 
-### 1.1) Try / TryAsync
+### 2) From nullable
+
+```csharp
+string? name = GetNameOrNull();
+var nameResult = Result.FromNullable(name, "Name was missing");
+
+int? port = GetPortOrNull();
+var portResult = Result.FromNullable(port, "Port was missing");
+```
+
+### 3) Try / TryAsync
 
 ```csharp
 var parsed = Result.Try(() => int.Parse("123")); // Success(123)
@@ -79,7 +90,7 @@ var failed = Result.Try(() => int.Parse("abc")); // Failure("...")
 var loaded = await Result.TryAsync(async () => { await Task.Delay(10); return "done"; }); // Success("done")
 ```
 
-### 2) Match both paths
+### 4.1) Match both paths
 
 ```csharp
 string text = ok.Match(
@@ -87,7 +98,7 @@ string text = ok.Match(
     onFailure: e => $"Error: {e}");
 ```
 
-### 2.1) Match async branches
+### 4.2) Match async branches
 
 ```csharp
 var text = await ok.MatchAsync(
@@ -95,19 +106,19 @@ var text = await ok.MatchAsync(
     onFailure: e => Task.FromResult("Error: {e}"));
 ```
 
-### 3) Map
+### 5.1) Map
 
 ```csharp
 var length = Result.Success("hello").Map(s => s.Length); // Success(5)
 ```
 
-### 3.1) Map failure
+### 5.2) Map failure
 
 ```csharp
 var mappedError = Result.Failure("boom").MapFailure(e => $"wrapped: {e}"); // Failure("wrapped: boom")
 ```
 
-### 3.2) ValueOr
+### 6) ValueOr
 
 ```csharp
 var value1 = Result.Success(10).ValueOr(0); // 10
@@ -115,7 +126,7 @@ var value2 = Result.Failure("bad").ValueOr(0); // 0
 var value3 = Result.Failure("bad").ValueOr(e => e.Length); // 3
 ```
 
-### 4) Bind
+### 7) Bind
 
 ```csharp
 Result ParsePositiveInt(string input) =>
@@ -126,7 +137,7 @@ Result ParsePositiveInt(string input) =>
 var parsed = Result.Success("25").Bind(ParsePositiveInt);
 ```
 
-### 5) Fallback with `|`
+### 8) Fallback with `|`
 
 ```csharp
 var chosen = Result.Failure("primary failed") | Result.Success(10); // Success(10)
@@ -175,6 +186,7 @@ var result = await query; // Success(12)
 - `Value` throws `InvalidOperationException` when result is failure.
 - `Error` throws `InvalidOperationException` when result is success.
 - `Failure(error)` throws `ArgumentException` if `error` is null/empty/whitespace.
+- `Result.FromNullable(value, error)` returns `Failure(error)` when the nullable input is null.
 - `Result.Try(...)` and `Result.TryAsync(...)` convert thrown exceptions into `Failure(...)` using the exception message.
 - If an exception message is null/whitespace, `Try/TryAsync` use the exception type name as the failure message.
 - Failure short-circuits through `Map`, `Bind`, and LINQ query chains.

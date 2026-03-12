@@ -3,16 +3,6 @@ namespace QuickResult.Tests.Unit;
 public class ResultTests
 {
     [Fact]
-    public void Success_CreatesSuccessResult()
-    {
-        var result = Result<int>.Success(123);
-
-        Assert.True(result.IsSuccess);
-        Assert.False(result.IsFailure);
-        Assert.Equal(123, result.Value);
-    }
-
-    [Fact]
     public void NonGenericFactory_Success_InfersType()
     {
         var result = Result.Success(123);
@@ -20,6 +10,50 @@ public class ResultTests
         Assert.True(result.IsSuccess);
         Assert.False(result.IsFailure);
         Assert.Equal(123, result.Value);
+    }
+
+    [Fact]
+    public void FromNullable_Reference_WhenNotNull_ReturnsSuccess()
+    {
+        string? value = "docker";
+
+        var result = Result.FromNullable(value, "missing");
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("docker", result.Value);
+    }
+
+    [Fact]
+    public void FromNullable_Reference_WhenNull_ReturnsFailure()
+    {
+        string? value = null;
+
+        var result = Result.FromNullable(value, "missing");
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("missing", result.Error);
+    }
+
+    [Fact]
+    public void FromNullable_ValueType_WhenHasValue_ReturnsSuccess()
+    {
+        int? value = 42;
+
+        var result = Result.FromNullable(value, "missing");
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(42, result.Value);
+    }
+
+    [Fact]
+    public void FromNullable_ValueType_WhenNull_ReturnsFailure()
+    {
+        int? value = null;
+
+        var result = Result.FromNullable(value, "missing");
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("missing", result.Error);
     }
 
     [Fact]

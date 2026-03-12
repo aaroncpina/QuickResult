@@ -266,6 +266,36 @@ public static class Result
     public static Result<T> Failure<T>(string error) => Result<T>.Failure(error);
 
     /// <summary>
+    /// Creates a result from a nullable reference value.
+    /// Returns success when <paramref name="value"/> is not null; otherwise failure with <paramref name="error"/>.
+    /// </summary>
+    /// <typeparam name="T">Type of the success value.</typeparam>
+    /// <param name="value">Nullable reference value to wrap.</param>
+    /// <param name="error">Failure message when <paramref name="value"/> is null.</param>
+    /// <returns>A successful or failed <see cref="Result{T}"/> depending on null state.</returns>
+    /// <exception cref="ArgumentException">
+    /// Thrown when <paramref name="error"/> is null, empty, or whitespace and <paramref name="value"/> is null.
+    /// </exception>
+    public static Result<T> FromNullable<T>(T? value, string error)
+        where T : class =>
+        value is null ? Failure<T>(error) : Success(value);
+
+    /// <summary>
+    /// Creates a result from a nullable value type.
+    /// Returns success when <paramref name="value"/> has a value; otherwise failure with <paramref name="error"/>.
+    /// </summary>
+    /// <typeparam name="T">Type of the success value.</typeparam>
+    /// <param name="value">Nullable value type to wrap.</param>
+    /// <param name="error">Failure message when <paramref name="value"/> has no value.</param>
+    /// <returns>A successful or failed <see cref="Result{T}"/> depending on null state.</returns>
+    /// <exception cref="ArgumentException">
+    /// Thrown when <paramref name="error"/> is null, empty, or whitespace and <paramref name="value"/> has no value.
+    /// </exception>
+    public static Result<T> FromNullable<T>(T? value, string error)
+        where T : struct =>
+        value.HasValue ? Success(value.Value) : Failure<T>(error);
+
+    /// <summary>
     /// Executes <paramref name="func"/> and wraps its outcome in a <see cref="Result{T}"/>.
     /// Returns <see cref="Result{T}.Failure(string)"/> with the exception message when an exception is thrown.
     /// </summary>
