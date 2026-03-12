@@ -13,15 +13,33 @@ public sealed class Result<T>
     private readonly T? _value;
     private readonly string? _error;
 
+    /// <summary>
+    /// Gets a value indicating whether the result represents success.
+    /// </summary>
     public bool IsSuccess { get; }
 
+    /// <summary>
+    /// Gets a value indicating whether the result represents failure.
+    /// </summary>
     public bool IsFailure => !IsSuccess;
 
+    /// <summary>
+    /// Gets the success value.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when accessed on a failure result.
+    /// </exception>
     public T Value =>
         IsSuccess
             ? _value!
             : throw new InvalidOperationException("Cannot access Value when result is failure.");
 
+    /// <summary>
+    /// Gets the failure error message.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when accessed on a success result.
+    /// </exception>
     public string Error =>
         IsFailure
             ? _error!
