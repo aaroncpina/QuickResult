@@ -13,6 +13,65 @@ public class ResultTests
     }
 
     [Fact]
+    public void NonGenericFactory_SuccessWithoutValue_ReturnsUnitSuccess()
+    {
+        var result = Result.Success();
+
+        Assert.True(result.IsSuccess);
+        Assert.False(result.IsFailure);
+        Assert.Equal(QuickResult.Unit.Value, result.Value);
+    }
+
+    [Fact]
+    public void Try_Action_WhenSucceeds_ReturnsUnitSuccess()
+    {
+        void Called() { }
+
+        var result = Result.Try(Called);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(QuickResult.Unit.Value, result.Value);
+    }
+
+    [Fact]
+    public void Try_Action_WhenThrows_ReturnsUnitFailure()
+    {
+        var result = Result.Try(() => throw new InvalidOperationException("boom"));
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("boom", result.Error);
+    }
+
+    [Fact]
+    public async Task TryAsync_Task_WhenSucceeds_ReturnsUnitSuccess()
+    {
+        var called = false;
+
+        var result = await Result.TryAsync(async () =>
+        {
+            await Task.Delay(1);
+            called = true;
+        });
+
+        Assert.True(called);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(QuickResult.Unit.Value, result.Value);
+    }
+
+    [Fact]
+    public async Task TryAsync_Task_WhenThrows_ReturnsUnitFailure()
+    {
+        var result = await Result.TryAsync(async () =>
+        {
+            await Task.Delay(1);
+            throw new InvalidOperationException("boom");
+        });
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("boom", result.Error);
+    }
+
+    [Fact]
     public void FromNullable_Reference_WhenNotNull_ReturnsSuccess()
     {
         string? value = "docker";

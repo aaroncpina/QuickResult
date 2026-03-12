@@ -45,6 +45,7 @@ var message = result.Match(
 | Member | Purpose |
 |---|---|
 | `Result<T>.Success(value)` | Create a successful result |
+| `Result.Success()` | Create a successful `Result<Unit>` |
 | `Result<T>.Failure(error)` | Create a failed result |
 | `Result.FromNullable(value, error)` | Convert nullable reference/value types into `Result<T>` |
 | `IsSuccess` / `IsFailure` | Check result state |
@@ -56,8 +57,8 @@ var message = result.Match(
 | `Map(...)` | Transform success value |
 | `MapFailure(...)` | Transform failure message |
 | `Bind(...)` | Chain result-returning functions |
-| `Result.Try(...)` | Wrap sync code in try/catch and return `Result<T>` |
-| `Result.TryAsync(...)` | Wrap async code in try/catch and return `Task<Result<T>>` |
+| `Result.Try(...)` | Wrap sync `Func<T>` or `Action` in try/catch and return result |
+| `Result.TryAsync(...)` | Wrap async `Func<Task<T>>` or `Func<Task>` in try/catch and return result |
 | `left \| right` | Fallback to `right` if `left` failed |
 
 ---
@@ -87,7 +88,11 @@ var portResult = Result.FromNullable(port, "Port was missing");
 var parsed = Result.Try(() => int.Parse("123")); // Success(123)
 var failed = Result.Try(() => int.Parse("abc")); // Failure("...")
 
+var sideEffect = Result.Try(() => Console.WriteLine("done")); // Result
+
 var loaded = await Result.TryAsync(async () => { await Task.Delay(10); return "done"; }); // Success("done")
+
+var ping = await Result.TryAsync(async () => { await Task.Delay(10); }); // Result
 ```
 
 ### 4.1) Match both paths
@@ -188,6 +193,7 @@ var result = await query; // Success(12)
 - `Failure(error)` throws `ArgumentException` if `error` is null/empty/whitespace.
 - `Result.FromNullable(value, error)` returns `Failure(error)` when the nullable input is null.
 - `Result.Try(...)` and `Result.TryAsync(...)` convert thrown exceptions into `Failure(...)` using the exception message.
+- `Try/TryAsync` support both value-returning and no-value (`Unit`) operations.
 - If an exception message is null/whitespace, `Try/TryAsync` use the exception type name as the failure message.
 - Failure short-circuits through `Map`, `Bind`, and LINQ query chains.
 

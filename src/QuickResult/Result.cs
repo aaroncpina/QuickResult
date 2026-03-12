@@ -258,6 +258,12 @@ public static class Result
     public static Result<T> Success<T>(T value) => Result<T>.Success(value);
 
     /// <summary>
+    /// Creates a successful result with no payload.
+    /// </summary>
+    /// <returns>A successful <see cref="Result{T}"/> with <see cref="Unit"/>.</returns>
+    public static Result<Unit> Success() => Result<Unit>.Success(Unit.Value);
+
+    /// <summary>
     /// Creates a failed result containing the specified error message.
     /// </summary>
     /// <typeparam name="T">Type of the success value the failure belongs to.</typeparam>
@@ -322,6 +328,32 @@ public static class Result
     }
 
     /// <summary>
+    /// Executes <paramref name="action"/> and wraps its outcome in a <see cref="Result{T}"/> of <see cref="Unit"/>.
+    /// Returns <see cref="Result{T}.Failure(string)"/> with the exception message when an exception is thrown.
+    /// </summary>
+    /// <param name="action">Action to execute.</param>
+    /// <returns>
+    /// <see cref="Success()"/> when <paramref name="action"/> succeeds;
+    /// otherwise <see cref="Failure{T}(string)"/> for <see cref="Unit"/> with the thrown exception message.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="action"/> is null.</exception>
+    public static Result<Unit> Try(Action action)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+        try
+        {
+            action();
+            return Success();
+        }
+        catch (Exception ex)
+        {
+            var message = string.IsNullOrWhiteSpace(ex.Message)
+                ? ex.GetType().Name : ex.Message;
+            return Failure<Unit>(message);
+        }
+    }
+
+    /// <summary>
     /// Executes an asynchronous function and wraps its outcome in a <see cref="Result{T}"/>.
     /// Returns <see cref="Result{T}.Failure(string)"/> with the thrown exception message when an exception is thrown.
     /// </summary>
@@ -344,6 +376,32 @@ public static class Result
             var message = string.IsNullOrWhiteSpace(ex.Message)
                 ? ex.GetType().Name : ex.Message;
             return Failure<T>(message);
+        }
+    }
+
+    /// <summary>
+    /// Executes an asynchronous operation and wraps its outcome in a <see cref="Result{T}"/> of <see cref="Unit"/>.
+    /// Returns <see cref="Result{T}.Failure(string)"/> with the thrown exception message when an exception is thrown.
+    /// </summary>
+    /// <param name="func">Asynchronous operation to execute.</param>
+    /// <returns>
+    /// A task that resolves to <see cref="Success()"/> when <paramref name="func"/> succeeds;
+    /// otherwise <see cref="Failure{T}(string)"/> for <see cref="Unit"/>.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="func"/> is null.</exception>
+    public static async Task<Result<Unit>> TryAsync(Func<Task> func)
+    {
+        ArgumentNullException.ThrowIfNull(func);
+        try
+        {
+            await func().ConfigureAwait(false);
+            return Success();
+        }
+        catch (Exception ex)
+        {
+            var message = string.IsNullOrWhiteSpace(ex.Message)
+                ? ex.GetType().Name : ex.Message;
+            return Failure<Unit>(message);
         }
     }
 }
