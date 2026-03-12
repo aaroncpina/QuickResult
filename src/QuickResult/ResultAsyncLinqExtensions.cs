@@ -41,7 +41,7 @@ public static class ResultAsyncLinqExtensions
     {
         var src = await source.ConfigureAwait(false);
         return src.IsFailure
-            ? Result<TOut>.Fail(src.Error)
+            ? Result<TOut>.Failure(src.Error)
             : Result<TOut>.Success(selector(src.Value));
     }
 
@@ -62,11 +62,11 @@ public static class ResultAsyncLinqExtensions
         this Result<TSource> source, Func<TSource, Task<Result<TBind>>> binder,
         Func<TSource, TBind, TResult> projector)
     {
-        if (source.IsFailure) return Result<TResult>.Fail(source.Error);
+        if (source.IsFailure) return Result<TResult>.Failure(source.Error);
         var sourceValue = source.Value;
         var bound = await binder(sourceValue).ConfigureAwait(false);
         return bound.IsFailure
-            ? Result<TResult>.Fail(bound.Error)
+            ? Result<TResult>.Failure(bound.Error)
             : Result<TResult>.Success(projector(sourceValue, bound.Value));
     }
 
@@ -85,11 +85,11 @@ public static class ResultAsyncLinqExtensions
         Func<TSource, TBind, TResult> projector)
     {
         var src = await source.ConfigureAwait(false);
-        if (src.IsFailure) return Result<TResult>.Fail(src.Error);
+        if (src.IsFailure) return Result<TResult>.Failure(src.Error);
         var sourceValue = src.Value;
         var bound = binder(sourceValue);
         return bound.IsFailure
-            ? Result<TResult>.Fail(bound.Error)
+            ? Result<TResult>.Failure(bound.Error)
             : Result<TResult>.Success(projector(sourceValue, bound.Value));
     }
 
@@ -108,11 +108,11 @@ public static class ResultAsyncLinqExtensions
         Func<TSource, TBind, TResult> projector)
     {
         var src = await source.ConfigureAwait(false);
-        if (src.IsFailure) return Result<TResult>.Fail(src.Error);
+        if (src.IsFailure) return Result<TResult>.Failure(src.Error);
         var sourceValue = src.Value;
         var bound = await binder(sourceValue).ConfigureAwait(false);
         return bound.IsFailure
-            ? Result<TResult>.Fail(bound.Error)
+            ? Result<TResult>.Failure(bound.Error)
             : Result<TResult>.Success(projector(sourceValue, bound.Value));
     }
 }

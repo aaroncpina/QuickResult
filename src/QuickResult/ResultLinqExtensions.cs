@@ -50,11 +50,11 @@ public static class ResultLinqExtensions
         this Result<TSource> source,
         Func<TSource, Result<TBind>> binder, Func<TSource, TBind, TResult> projector)
     {
-        if (source.IsFailure) return Result<TResult>.Fail(source.Error);
+        if (source.IsFailure) return Result<TResult>.Failure(source.Error);
         var sourceValue = source.Value;
         var bound = binder(sourceValue);
         return bound.IsFailure
-            ? Result<TResult>.Fail(bound.Error)
+            ? Result<TResult>.Failure(bound.Error)
             : Result<TResult>.Success(projector(sourceValue, bound.Value));
     }
 }

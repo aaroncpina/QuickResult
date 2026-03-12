@@ -86,7 +86,7 @@ public sealed class Result<T>
     /// <exception cref="ArgumentException">
     /// Thrown when <paramref name="error"/> is null, empty, or whitespace.
     /// </exception>
-    public static Result<T> Fail(string error) => new(error);
+    public static Result<T> Failure(string error) => new(error);
 
     /// <summary>
     /// Returns <paramref name="left"/> when it is successful; otherwise returns <paramref name="right"/>.
@@ -131,7 +131,7 @@ public sealed class Result<T>
     /// </code>
     /// </example>
     public Result<TOut> Map<TOut>(Func<T, TOut> mapper) =>
-        IsSuccess ? Result<TOut>.Success(mapper(Value)) : Result<TOut>.Fail(Error);
+        IsSuccess ? Result<TOut>.Success(mapper(Value)) : Result<TOut>.Failure(Error);
 
     /// <summary>
     /// Chains a result-producing operation onto a successful result while preserving failures.
@@ -147,13 +147,13 @@ public sealed class Result<T>
     /// Result&lt;int&gt; ParsePositive(string s) =>
     ///     int.TryParse(s, out var n) &amp;&amp; n &gt; 0
     ///         ? Result&lt;int&gt;.Success(n)
-    ///         : Result&lt;int&gt;.Fail("Not a positive integer");
+    ///         : Result&lt;int&gt;.Failure("Not a positive integer");
     ///
     /// var parsed = Result&lt;string&gt;.Success("42").Bind(ParsePositive);
     /// </code>
     /// </example>
     public Result<TOut> Bind<TOut>(Func<T, Result<TOut>> binder) =>
-        IsSuccess ? binder(Value) : Result<TOut>.Fail(Error);
+        IsSuccess ? binder(Value) : Result<TOut>.Failure(Error);
 
     /// <summary>
     /// Returns a string representation of the current result.
@@ -161,4 +161,53 @@ public sealed class Result<T>
     /// <returns><c>Success(value)</c> for success, or <c>Failure(error)</c> for failure.</returns>
     public override string ToString() =>
         IsSuccess ? $"Success({Value})" : $"Failure({Error})";
+}
+
+/// <summary>
+/// Convenience factory methods for creating typed <see cref="Result{T}"/> instances
+/// with less call-site verbosity.
+/// </summary>
+public static class Result
+{
+    /// <summary>
+    /// Creates a successful result containing the specified value.
+    /// </summary>
+    /// <typeparam name="T">Type of the success value.</typeparam>
+    /// <param name="value">The success value.</param>
+    /// <returns>A successful <see cref="Result{T}"/> instance.</returns>
+    public static Result<T> Success<T>(T value) => Result<T>.Success(value);
+
+    /// <summary>
+    /// Creates a failed result containing the specified error message.
+    /// </summary>
+    /// <typeparam name="T">Type of the success value the failure belongs to.</typeparam>
+    /// <param name="error">The error message.</param>
+    /// <returns>A failed <see cref="Result{T}"/> instance.</returns>
+    public static Result<T> Failure<T>(string error) => Result<T>.Failure(error);
+
+    /// <summary>
+    /// Executes <paramref name="func"/> and wraps its outcome in a <see cref="Result{T}"/>.
+    /// Returns <see cref="Result{T}.Failure(string)"/> with the exception message when an exception is thrown.
+    /// </summary>
+    /// <typeparam name="T">Type of the produced value.</typeparam>
+    /// <param name="func">Function to execute.</param>
+    /// <returns>
+    /// <see cref="Result{T}.Success(T)"/> when <paramref name="func"/> succeeds;
+    /// otherwise <see cref="Result{T}.Failure(string)"/> with the thrown exception message.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="func"/> is null.</exception>
+    public static Result<T> Try<T>(Func<T> func)
+    {
+        ArgumentNullException.ThrowIfNull(func);
+        try
+        {
+            return Success(func());
+        }
+        catch (Exception ex)
+        {
+            var message = string.IsNullOrWhiteSpace(ex.Message)
+                ? ex.GetType().Name : ex.Message;
+            return Failure<T>(message);
+        }
+    }
 }

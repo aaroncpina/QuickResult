@@ -45,7 +45,7 @@ var message = result.Match(
 | Member | Purpose |
 |---|---|
 | `Result<T>.Success(value)` | Create a successful result |
-| `Result<T>.Fail(error)` | Create a failed result |
+| `Result<T>.Failure(error)` | Create a failed result |
 | `IsSuccess` / `IsFailure` | Check result state |
 | `Value` | Get success value (throws on failure) |
 | `Error` | Get error message (throws on success) |
@@ -61,8 +61,8 @@ var message = result.Match(
 ### 1) Create success/failure
 
 ```csharp
-var ok = Result .Success(42);
-var fail = Result.Fail("Something went wrong");
+var ok = Result.Success(42);
+var fail = Result.Failure("Something went wrong");
 ```
 
 ### 2) Match both paths
@@ -84,8 +84,8 @@ var length = Result.Success("hello").Map(s => s.Length); // Success(5)
 ```csharp
 Result ParsePositiveInt(string input) =>
     int.TryParse(input, out var n) && n > 0
-        ? Result .Success(n)
-        : Result.Fail("Input must be a positive integer");
+        ? Result.Success(n)
+        : Result.Failure("Input must be a positive integer");
 
 var parsed = Result.Success("25").Bind(ParsePositiveInt);
 ```
@@ -93,7 +93,7 @@ var parsed = Result.Success("25").Bind(ParsePositiveInt);
 ### 5) Fallback with `|`
 
 ```csharp
-var chosen = Result.Fail("primary failed") | Result.Success(10); // Success(10)
+var chosen = Result.Failure("primary failed") | Result.Success(10); // Success(10)
 ```
 
 ---

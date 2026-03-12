@@ -13,9 +13,29 @@ public class ResultTests
     }
 
     [Fact]
-    public void Fail_CreatesFailureResult()
+    public void NonGenericFactory_Success_InfersType()
     {
-        var result = Result<int>.Fail("boom");
+        var result = Result.Success(123);
+
+        Assert.True(result.IsSuccess);
+        Assert.False(result.IsFailure);
+        Assert.Equal(123, result.Value);
+    }
+
+    [Fact]
+    public void Try_WhenFunctionSucceeds_ReturnsSuccess()
+    {
+        var result = Result.Try(() => 42);
+
+        Assert.True(result.IsSuccess);
+        Assert.False(result.IsFailure);
+        Assert.Equal(42, result.Value);
+    }
+
+    [Fact]
+    public void Try_WhenFunctionThrows_ReturnsFailureWithExceptionMessage()
+    {
+        var result = Result.Try<int>(() => throw new InvalidOperationException("boom"));
 
         Assert.True(result.IsFailure);
         Assert.False(result.IsSuccess);
@@ -23,15 +43,19 @@ public class ResultTests
     }
 
     [Fact]
-    public void Fail_WithWhitespaceError_ThrowsArgumentException()
+    public void NonGenericFactory_Failure_CreatesFailureResult()
     {
-        Assert.Throws<ArgumentException>(() => Result<int>.Fail(" "));
+        var result = Result.Failure<int>("boom");
+
+        Assert.True(result.IsFailure);
+        Assert.False(result.IsSuccess);
+        Assert.Equal("boom", result.Error);
     }
 
     [Fact]
     public void Value_OnFailure_ThrowsInvalidOperationException()
     {
-        var result = Result<int>.Fail("no value");
+        var result = Result<int>.Failure("no value");
 
         Assert.Throws<InvalidOperationException>(() => _ = result.Value);
     }
@@ -59,7 +83,7 @@ public class ResultTests
     [Fact]
     public void Match_OnFailure_UsesFailureFunc()
     {
-        var result = Result<int>.Fail("bad");
+        var result = Result<int>.Failure("bad");
 
         var text = result.Match(
             onSuccess: v => $"ok:{v}",
@@ -82,7 +106,7 @@ public class ResultTests
     [Fact]
     public void Map_OnFailure_PropagatesFailure()
     {
-        var result = Result<int>.Fail("map fail");
+        var result = Result<int>.Failure("map fail");
 
         var mapped = result.Map(v => v * 10);
 
@@ -104,7 +128,7 @@ public class ResultTests
     [Fact]
     public void Bind_OnFailure_PropagatesFailure()
     {
-        var result = Result<int>.Fail("bind fail");
+        var result = Result<int>.Failure("bind fail");
 
         var bound = result.Bind(v => Result<string>.Success($"v:{v}"));
 
@@ -127,7 +151,7 @@ public class ResultTests
     [Fact]
     public void PipeOperator_ReturnsRight_WhenLeftIsFailure_AndRightIsSuccess()
     {
-        var left = Result<int>.Fail("left fail");
+        var left = Result<int>.Failure("left fail");
         var right = Result<int>.Success(2);
 
         var chosen = left | right;
@@ -139,8 +163,8 @@ public class ResultTests
     [Fact]
     public void PipeOperator_ReturnsRight_WhenLeftIsFailure_AndRightIsFailure()
     {
-        var left = Result<int>.Fail("left fail");
-        var right = Result<int>.Fail("right fail");
+        var left = Result<int>.Failure("left fail");
+        var right = Result<int>.Failure("right fail");
 
         var chosen = left | right;
 
@@ -165,7 +189,7 @@ public class ResultTests
     {
         var query =
             from a in Result<int>.Success(10)
-            from b in Result<int>.Fail("sync fail")
+            from b in Result<int>.Failure("sync fail")
             select a + b;
 
         Assert.True(query.IsFailure);
@@ -220,7 +244,7 @@ public class ResultTests
     {
         var query =
             from a in GetSuccessAsync(4)                   // async source
-            from b in Result<int>.Fail("mixed fail")       // sync bind
+            from b in Result<int>.Failure("mixed fail")       // sync bind
             select a + b;
 
         var result = await query;
@@ -233,5 +257,5 @@ public class ResultTests
         Task.FromResult(Result<int>.Success(value));
 
     private static Task<Result<T>> GetFailureAsync<T>(string error) =>
-        Task.FromResult(Result<T>.Fail(error));
+        Task.FromResult(Result<T>.Failure(error));
 }
