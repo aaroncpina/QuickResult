@@ -6,7 +6,7 @@
         <LangVersion>latest</LangVersion>
 
         <!-- Metadata -->
-        <Version>1.0.0</Version>
+        <Version>1.1.0</Version>
         <Authors>Aaron Pina</Authors>
         <Description>Lightweight Result monad for C# with full LINQ query syntax for both sync and async. Mix sync and async steps seamlessly in one query. Zero dependencies.</Description>
         <PackageTags>result;monad;linq;functional;error-handling;async;csharp</PackageTags>
