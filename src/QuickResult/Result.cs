@@ -1,5 +1,5 @@
-using System.Threading.Tasks;
 using System;
+using System.Threading.Tasks;
 
 namespace QuickResult;
 
@@ -8,49 +8,20 @@ namespace QuickResult;
 /// of type <typeparamref name="T"/> or fail with an error message.
 /// </summary>
 /// <typeparam name="T">Type of the success value.</typeparam>
-/// <remarks>
-/// This type is intended for explicit error handling without relying on exceptions
-/// for expected control flow.
-/// </remarks>
-/// <example>
-/// <code>
-/// var result = Result&lt;int&gt;.Success(5)
-///     .Map(x => x * 2);
-/// // Success(10)
-/// </code>
-/// </example>
 public sealed class Result<T>
 {
     private readonly T? _value;
     private readonly string? _error;
 
-    /// <summary>
-    /// Gets a value indicating whether the result represents success.
-    /// </summary>
     public bool IsSuccess { get; }
 
-    /// <summary>
-    /// Gets a value indicating whether the result represents failure.
-    /// </summary>
     public bool IsFailure => !IsSuccess;
 
-    /// <summary>
-    /// Gets the success value.
-    /// </summary>
-    /// <exception cref="InvalidOperationException">
-    /// Thrown when accessed on a failure result.
-    /// </exception>
     public T Value =>
         IsSuccess
             ? _value!
             : throw new InvalidOperationException("Cannot access Value when result is failure.");
 
-    /// <summary>
-    /// Gets the failure error message.
-    /// </summary>
-    /// <exception cref="InvalidOperationException">
-    /// Thrown when accessed on a success result.
-    /// </exception>
     public string Error =>
         IsFailure
             ? _error!
@@ -116,6 +87,103 @@ public sealed class Result<T>
         IsSuccess ? onSuccess(Value) : onFailure(Error);
 
     /// <summary>
+    /// Projects the result into a single asynchronous value by executing one of two asynchronous delegates
+    /// based on whether the result is successful or failed.
+    /// </summary>
+    /// <typeparam name="TResult">The return type produced by either delegate.</typeparam>
+    /// <param name="onSuccess">Asynchronous delegate executed when the result is successful.</param>
+    /// <param name="onFailure">Asynchronous delegate executed when the result is failed.</param>
+    /// <returns>A task that resolves to the value returned by the executed delegate.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="onSuccess"/> or <paramref name="onFailure"/> is <see langword="null"/>.
+    /// </exception>
+    public Task<TResult> MatchAsync<TResult>(
+        Func<T, Task<TResult>> onSuccess,
+        Func<string, Task<TResult>> onFailure)
+    {
+        ArgumentNullException.ThrowIfNull(onSuccess);
+        ArgumentNullException.ThrowIfNull(onFailure);
+        return IsSuccess ? onSuccess(Value) : onFailure(Error);
+    }
+
+    /// <summary>
+    /// Projects the result into a single asynchronous value by executing an asynchronous success delegate
+    /// or a synchronous failure delegate.
+    /// </summary>
+    /// <typeparam name="TResult">The return type produced by either delegate.</typeparam>
+    /// <param name="onSuccess">Asynchronous delegate executed when the result is successful.</param>
+    /// <param name="onFailure">Delegate executed when the result is failed.</param>
+    /// <returns>A task that resolves to the value returned by the executed delegate.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="onSuccess"/> or <paramref name="onFailure"/> is <see langword="null"/>.
+    /// </exception>
+    public Task<TResult> MatchAsync<TResult>(
+        Func<T, Task<TResult>> onSuccess,
+        Func<string, TResult> onFailure)
+    {
+        ArgumentNullException.ThrowIfNull(onSuccess);
+        ArgumentNullException.ThrowIfNull(onFailure);
+        return IsSuccess ? onSuccess(Value) : Task.FromResult(onFailure(Error));
+    }
+
+    /// <summary>
+    /// Projects the result into a single asynchronous value by executing a synchronous success delegate
+    /// or an asynchronous failure delegate.
+    /// </summary>
+    /// <typeparam name="TResult">The return type produced by either delegate.</typeparam>
+    /// <param name="onSuccess">Delegate executed when the result is successful.</param>
+    /// <param name="onFailure">Asynchronous delegate executed when the result is failed.</param>
+    /// <returns>A task that resolves to the value returned by the executed delegate.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="onSuccess"/> or <paramref name="onFailure"/> is <see langword="null"/>.
+    /// </exception>
+    public Task<TResult> MatchAsync<TResult>(
+        Func<T, TResult> onSuccess,
+        Func<string, Task<TResult>> onFailure)
+    {
+        ArgumentNullException.ThrowIfNull(onSuccess);
+        ArgumentNullException.ThrowIfNull(onFailure);
+        return IsSuccess ? Task.FromResult(onSuccess(Value)) : onFailure(Error);
+    }
+
+    /// <summary>
+    /// Returns the success value when successful; otherwise returns <paramref name="fallback"/>.
+    /// </summary>
+    /// <param name="fallback">Value to return when this result is failed.</param>
+    /// <returns>The success value or <paramref name="fallback"/>.</returns>
+    public T ValueOr(T fallback) => IsSuccess ? Value : fallback;
+
+    /// <summary>
+    /// Returns the success value when successful; otherwise returns a value produced from the failure message.
+    /// </summary>
+    /// <param name="fallbackFactory">Function that produces a fallback value from the failure message.</param>
+    /// <returns>The success value or the value produced by <paramref name="fallbackFactory"/>.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="fallbackFactory"/> is <see langword="null"/>.
+    /// </exception>
+    public T ValueOr(Func<string, T> fallbackFactory)
+    {
+        ArgumentNullException.ThrowIfNull(fallbackFactory);
+        return IsSuccess ? Value : fallbackFactory(Error);
+    }
+
+    /// <summary>
+    /// Transforms the failure message using the specified mapper while preserving successes.
+    /// </summary>
+    /// <param name="mapper">Mapping function applied when this result is failed.</param>
+    /// <returns>
+    /// This result unchanged when successful; otherwise a failed result with the mapped error message.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="mapper"/> is <see langword="null"/>.
+    /// </exception>
+    public Result<T> MapFailure(Func<string, string> mapper)
+    {
+        ArgumentNullException.ThrowIfNull(mapper);
+        return IsSuccess ? this : Result<T>.Failure(mapper(Error));
+    }
+
+    /// <summary>
     /// Transforms the success value using the specified mapper while preserving failures.
     /// </summary>
     /// <typeparam name="TOut">Type of the mapped success value.</typeparam>
@@ -124,13 +192,6 @@ public sealed class Result<T>
     /// A <see cref="Result{TOut}"/> containing the mapped value when successful;
     /// otherwise a propagated failure.
     /// </returns>
-    /// <example>
-    /// <code>
-    /// var length = Result&lt;string&gt;.Success("hello")
-    ///     .Map(s => s.Length);
-    /// // Success(5)
-    /// </code>
-    /// </example>
     public Result<TOut> Map<TOut>(Func<T, TOut> mapper) =>
         IsSuccess ? Result<TOut>.Success(mapper(Value)) : Result<TOut>.Failure(Error);
 

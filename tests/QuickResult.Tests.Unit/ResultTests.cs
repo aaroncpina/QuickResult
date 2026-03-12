@@ -93,14 +93,103 @@ public class ResultTests
     }
 
     [Fact]
-    public void Map_OnSuccess_MapsValue()
+    public async Task MatchAsync_BothAsync_OnSuccess_UsesSuccessFunc()
     {
-        var result = Result<int>.Success(3);
+        var result = Result<int>.Success(5);
 
-        var mapped = result.Map(v => v * 10);
+        var text = await result.MatchAsync(
+            onSuccess: v => Task.FromResult($"ok:{v}"),
+            onFailure: e => Task.FromResult($"err:{e}"));
+
+        Assert.Equal("ok:5", text);
+    }
+
+    [Fact]
+    public async Task MatchAsync_BothAsync_OnFailure_UsesFailureFunc()
+    {
+        var result = Result<int>.Failure("bad");
+
+        var text = await result.MatchAsync(
+            onSuccess: v => Task.FromResult($"ok:{v}"),
+            onFailure: e => Task.FromResult($"err:{e}"));
+
+        Assert.Equal("err:bad", text);
+    }
+
+    [Fact]
+    public async Task MatchAsync_AsyncSuccess_SyncFailure_Works()
+    {
+        var result = Result<int>.Failure("bad");
+
+        var text = await result.MatchAsync(
+            onSuccess: v => Task.FromResult($"ok:{v}"),
+            onFailure: e => $"err:{e}");
+
+        Assert.Equal("err:bad", text);
+    }
+
+    [Fact]
+    public async Task MatchAsync_SyncSuccess_AsyncFailure_Works()
+    {
+        var result = Result<int>.Success(5);
+
+        var text = await result.MatchAsync(
+            onSuccess: v => $"ok:{v}",
+            onFailure: e => Task.FromResult($"err:{e}"));
+
+        Assert.Equal("ok:5", text);
+    }
+
+    [Fact]
+    public void MapFailure_OnFailure_MapsError()
+    {
+        var result = Result<int>.Failure("boom");
+
+        var mapped = result.MapFailure(e => $"wrapped:{e}");
+
+        Assert.True(mapped.IsFailure);
+        Assert.Equal("wrapped:boom", mapped.Error);
+    }
+
+    [Fact]
+    public void MapFailure_OnSuccess_PreservesSuccess()
+    {
+        var result = Result<int>.Success(7);
+
+        var mapped = result.MapFailure(e => $"wrapped:{e}");
 
         Assert.True(mapped.IsSuccess);
-        Assert.Equal(30, mapped.Value);
+        Assert.Equal(7, mapped.Value);
+    }
+
+    [Fact]
+    public void ValueOr_OnSuccess_ReturnsValue()
+    {
+        var result = Result<int>.Success(99);
+
+        var value = result.ValueOr(10);
+
+        Assert.Equal(99, value);
+    }
+
+    [Fact]
+    public void ValueOr_OnFailure_ReturnsFallback()
+    {
+        var result = Result<int>.Failure("no value");
+
+        var value = result.ValueOr(10);
+
+        Assert.Equal(10, value);
+    }
+
+    [Fact]
+    public void ValueOrFactory_OnFailure_UsesError()
+    {
+        var result = Result<int>.Failure("bad");
+
+        var value = result.ValueOr(e => e.Length);
+
+        Assert.Equal(3, value);
     }
 
     [Fact]

@@ -50,8 +50,13 @@ var message = result.Match(
 | `Value` | Get success value (throws on failure) |
 | `Error` | Get error message (throws on success) |
 | `Match(...)` | Convert both branches to one value |
+| `MatchAsync(...)` | Async version of match (supports async branches) |
+| `ValueOr(...)` | Get value or fallback |
 | `Map(...)` | Transform success value |
+| `MapFailure(...)` | Transform failure message |
 | `Bind(...)` | Chain result-returning functions |
+| `Result.Try(...)` | Wrap sync code in try/catch and return `Result<T>` |
+| `Result.TryAsync(...)` | Wrap async code in try/catch and return `Task<Result<T>>` |
 | `left \| right` | Fallback to `right` if `left` failed |
 
 ---
@@ -65,6 +70,15 @@ var ok = Result.Success(42);
 var fail = Result.Failure("Something went wrong");
 ```
 
+### 1.1) Try / TryAsync
+
+```csharp
+var parsed = Result.Try(() => int.Parse("123")); // Success(123)
+var failed = Result.Try(() => int.Parse("abc")); // Failure("...")
+
+var loaded = await Result.TryAsync(async () => { await Task.Delay(10); return "done"; }); // Success("done")
+```
+
 ### 2) Match both paths
 
 ```csharp
@@ -73,10 +87,32 @@ string text = ok.Match(
     onFailure: e => $"Error: {e}");
 ```
 
+### 2.1) Match async branches
+
+```csharp
+var text = await ok.MatchAsync(
+    onSuccess: v => Task.FromResult("Value: {v}"),
+    onFailure: e => Task.FromResult("Error: {e}"));
+```
+
 ### 3) Map
 
 ```csharp
 var length = Result.Success("hello").Map(s => s.Length); // Success(5)
+```
+
+### 3.1) Map failure
+
+```csharp
+var mappedError = Result.Failure("boom").MapFailure(e => $"wrapped: {e}"); // Failure("wrapped: boom")
+```
+
+### 3.2) ValueOr
+
+```csharp
+var value1 = Result.Success(10).ValueOr(0); // 10
+var value2 = Result.Failure("bad").ValueOr(0); // 0
+var value3 = Result.Failure("bad").ValueOr(e => e.Length); // 3
 ```
 
 ### 4) Bind
@@ -138,7 +174,9 @@ var result = await query; // Success(12)
 
 - `Value` throws `InvalidOperationException` when result is failure.
 - `Error` throws `InvalidOperationException` when result is success.
-- `Fail(error)` throws `ArgumentException` if `error` is null/empty/whitespace.
+- `Failure(error)` throws `ArgumentException` if `error` is null/empty/whitespace.
+- `Result.Try(...)` and `Result.TryAsync(...)` convert thrown exceptions into `Failure(...)` using the exception message.
+- If an exception message is null/whitespace, `Try/TryAsync` use the exception type name as the failure message.
 - Failure short-circuits through `Map`, `Bind`, and LINQ query chains.
 
 ---
