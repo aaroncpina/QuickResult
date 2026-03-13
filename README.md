@@ -181,6 +181,36 @@ var result = await query;
 
 ---
 
+## Boolean guards in LINQ queries
+
+When your query includes a boolean step (for example, "does user own documents?"), you can short-circuit with domain-specific errors using:
+
+- `FailIfTrue(error)`
+- `FailIfFalse(error)`
+
+These methods work on `Result<bool>` and `Task<Result<bool>>`, so they compose cleanly in LINQ query syntax.
+
+```csharp
+Task<Result> CheckAsync() =>
+    Task.FromResult(Result.Success(true));
+
+Task NextAsync() =>
+    Task.FromResult(Result.Success(42));
+
+var query = from ok in CheckAsync().FailIfFalse("Precondition failed")
+            from value in NextAsync()
+            select value * 2;
+
+var result = await query; // Success(84)
+```
+
+### Why not use `where`?
+
+C# query `where` only accepts a boolean predicate and cannot carry a domain error message.
+For `Result` pipelines, explicit boolean guards (`FailIfTrue` / `FailIfFalse`) keep error handling clear and intentional.
+
+---
+
 ## LINQ Support
 
 ### Sync query

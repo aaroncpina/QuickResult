@@ -617,6 +617,140 @@ public class ResultTests
         Assert.Equal(7, result.Value);
     }
 
+    [Fact]
+    public void FailIfTrue_Sync_WhenValueTrue_ReturnsFailure()
+    {
+        var result = Result.Success(true).FailIfTrue("value was true");
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("value was true", result.Error);
+    }
+
+    [Fact]
+    public void FailIfTrue_Sync_WhenValueFalse_ReturnsSuccess()
+    {
+        var result = Result.Success(false).FailIfTrue("value was true");
+
+        Assert.True(result.IsSuccess);
+        Assert.False(result.Value);
+    }
+
+    [Fact]
+    public void FailIfTrue_Sync_WhenSourceAlreadyFailure_PropagatesFailure()
+    {
+        var result = Result.Failure<bool>("upstream fail").FailIfTrue("value was true");
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("upstream fail", result.Error);
+    }
+
+    [Fact]
+    public async Task FailIfTrue_Async_WhenValueTrue_ReturnsFailure()
+    {
+        var result = await Task.FromResult(Result.Success(true)).FailIfTrue("value was true");
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("value was true", result.Error);
+    }
+
+    [Fact]
+    public async Task FailIfTrue_Async_WhenValueFalse_ReturnsSuccess()
+    {
+        var result = await Task.FromResult(Result.Success(false)).FailIfTrue("value was true");
+
+        Assert.True(result.IsSuccess);
+        Assert.False(result.Value);
+    }
+
+    [Fact]
+    public async Task FailIfTrue_Async_WhenSourceAlreadyFailure_PropagatesFailure()
+    {
+        var result = await Task.FromResult(Result.Failure<bool>("upstream fail")).FailIfTrue("value was true");
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("upstream fail", result.Error);
+    }
+
+    [Fact]
+    public void FailIfFalse_Sync_WhenValueFalse_ReturnsFailure()
+    {
+        var result = Result.Success(false).FailIfFalse("value was false");
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("value was false", result.Error);
+    }
+
+    [Fact]
+    public void FailIfFalse_Sync_WhenValueTrue_ReturnsSuccess()
+    {
+        var result = Result.Success(true).FailIfFalse("value was false");
+
+        Assert.True(result.IsSuccess);
+        Assert.True(result.Value);
+    }
+
+    [Fact]
+    public void FailIfFalse_Sync_WhenSourceAlreadyFailure_PropagatesFailure()
+    {
+        var result = Result.Failure<bool>("upstream fail").FailIfFalse("value was false");
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("upstream fail", result.Error);
+    }
+
+    [Fact]
+    public async Task FailIfFalse_Async_WhenValueFalse_ReturnsFailure()
+    {
+        var result = await Task.FromResult(Result.Success(false)).FailIfFalse("value was false");
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("value was false", result.Error);
+    }
+
+    [Fact]
+    public async Task FailIfFalse_Async_WhenValueTrue_ReturnsSuccess()
+    {
+        var result = await Task.FromResult(Result.Success(true)).FailIfFalse("value was false");
+
+        Assert.True(result.IsSuccess);
+        Assert.True(result.Value);
+    }
+
+    [Fact]
+    public async Task FailIfFalse_Async_WhenSourceAlreadyFailure_PropagatesFailure()
+    {
+        var result = await Task.FromResult(Result.Failure<bool>("upstream fail")).FailIfFalse("value was false");
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("upstream fail", result.Error);
+    }
+
+    [Fact]
+    public async Task Linq_AsyncQuery_ComposesFailIfTrue_ProducesFailure()
+    {
+        var query =
+            from ownsDocs in Task.FromResult(Result.Success(true)).FailIfTrue("documents still owned")
+            select ownsDocs;
+
+        var result = await query;
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("documents still owned", result.Error);
+    }
+
+    [Fact]
+    public async Task Linq_AsyncQuery_ComposesFailIfFalse_ContinuesOnSuccess()
+    {
+        var query =
+            from ownsDocs in Task.FromResult(Result.Success(false)).FailIfTrue("documents still owned")
+            select ownsDocs;
+
+        var result = await query;
+
+        Assert.True(result.IsSuccess);
+        Assert.False(result.Value);
+    }
+
     private static Task<Result<int>> GetSuccessAsync(int value) =>
         Task.FromResult(Result<int>.Success(value));
 
