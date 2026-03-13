@@ -106,12 +106,20 @@ string text = ok.Match(
     onFailure: e => $"Error: {e}");
 ```
 
-### 4.2) Match async branches
+### 4.2) Match async branches (`Result<T>` source)
 
 ```csharp
 var text = await ok.MatchAsync(
     onSuccess: v => Task.FromResult("Value: {v}"),
     onFailure: e => Task.FromResult("Error: {e}"));
+```
+
+### 4.3) Match directly on `Task<Result<T>>` (fluent)
+
+```csharp
+var text = await GetSuccessAsync(11).MatchAsync(
+    onSuccess: v => "success: {v}",
+    onFailure: e => "failure: {e}");
 ```
 
 ### 5.1) Map
@@ -232,6 +240,17 @@ var query = from a in GetAsync(4)
             select a * b;
 
 var result = await query; // Success(20)
+```
+
+### Async query + fluent MatchAsync
+
+```csharp
+var text = await (from left in GetAsync(11)
+                  from right in GetAsync(31)
+                  select left + right)
+                 .MatchAsync(
+                      onSuccess: v => "success: {v}",
+                      onFailure: e => "failure: {e}");
 ```
 
 ### Mixed sync/async query

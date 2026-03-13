@@ -262,6 +262,115 @@ public class ResultTests
     }
 
     [Fact]
+    public async Task MatchAsync_TaskSource_BothAsync_OnSuccess_UsesSuccessFunc()
+    {
+        var text = await Task.FromResult(Result<int>.Success(5))
+            .MatchAsync(
+                onSuccess: v => Task.FromResult($"ok:{v}"),
+                onFailure: e => Task.FromResult($"err:{e}"));
+
+        Assert.Equal("ok:5", text);
+    }
+
+    [Fact]
+    public async Task MatchAsync_TaskSource_BothAsync_OnFailure_UsesFailureFunc()
+    {
+        var text = await Task.FromResult(Result<int>.Failure("bad"))
+            .MatchAsync(
+                onSuccess: v => Task.FromResult($"ok:{v}"),
+                onFailure: e => Task.FromResult($"err:{e}"));
+
+        Assert.Equal("err:bad", text);
+    }
+
+    [Fact]
+    public async Task MatchAsync_TaskSource_AsyncSuccess_SyncFailure_Works()
+    {
+        var text = await Task.FromResult(Result<int>.Failure("bad"))
+            .MatchAsync(
+                onSuccess: v => Task.FromResult($"ok:{v}"),
+                onFailure: e => $"err:{e}");
+
+        Assert.Equal("err:bad", text);
+    }
+
+    [Fact]
+    public async Task MatchAsync_TaskSource_SyncSuccess_AsyncFailure_Works()
+    {
+        var text = await Task.FromResult(Result<int>.Success(5))
+            .MatchAsync(
+                onSuccess: v => $"ok:{v}",
+                onFailure: e => Task.FromResult($"err:{e}"));
+
+        Assert.Equal("ok:5", text);
+    }
+
+    [Fact]
+    public async Task MatchAsync_TaskSource_BothSync_Works()
+    {
+        var text = await Task.FromResult(Result<int>.Failure("bad"))
+            .MatchAsync(
+                onSuccess: v => $"ok:{v}",
+                onFailure: e => $"err:{e}");
+
+        Assert.Equal("err:bad", text);
+    }
+
+    [Fact]
+    public async Task Linq_AsyncQuery_AbstractProjection_Succeeds()
+    {
+        var query =
+            from left in GetSuccessAsync(11)
+            from right in GetSuccessAsync(31)
+            select left + right;
+
+        var result = await query;
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(42, result.Value);
+    }
+
+    [Fact]
+    public async Task Linq_AsyncQuery_ThenMatchAsync_SyncHandlers_OnSuccess_ReturnsSuccessText()
+    {
+        var result = await (from left in GetSuccessAsync(11)
+                            from right in GetSuccessAsync(31)
+                            select left + right)
+                           .MatchAsync(
+                                onSuccess: val => $"success: {val}",
+                                onFailure: err => $"failure: {err}");
+
+        Assert.Equal("success: 42", result);
+    }
+
+    [Fact]
+    public async Task Linq_AsyncQuery_ThenMatchAsync_SyncHandlers_OnFailure_ReturnsFailureText()
+    {
+        var result = await (from left in GetSuccessAsync(11)
+                            from right in GetFailureAsync<int>("projection failed")
+                            select left + right)
+                           .MatchAsync(
+                                onSuccess: val => $"success: {val}",
+                                onFailure: err => $"failure: {err}");
+
+        Assert.Equal("failure: projection failed", result);
+    }
+
+    [Fact]
+    public async Task Linq_AsyncQuery_AbstractProjection_PropagatesFailure()
+    {
+        var query =
+            from left in GetSuccessAsync(11)
+            from right in GetFailureAsync<int>("projection failed")
+            select left + right;
+
+        var result = await query;
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("projection failed", result.Error);
+    }
+
+    [Fact]
     public void MapFailure_OnFailure_MapsError()
     {
         var result = Result<int>.Failure("boom");
