@@ -579,6 +579,44 @@ public class ResultTests
         Assert.Equal("b missing", result.Error);
     }
 
+    [Fact]
+    public async Task Pipeline_FromAsync_ConfiguredAwaitable_WhenSucceeds_ReturnsSuccess()
+    {
+        var result = await Result.FromAsync(() => Task.FromResult(42).ConfigureAwait(false)).Try();
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(42, result.Value);
+    }
+
+    [Fact]
+    public async Task Pipeline_FromAsync_ConfiguredAwaitable_WhenThrows_ReturnsFailure()
+    {
+        var result = await Result.FromAsync(
+            () => Task.FromException<int>(new InvalidOperationException("boom")).ConfigureAwait(false)
+        ).Try();
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("boom", result.Error);
+    }
+
+    [Fact]
+    public void Pipeline_FromAsync_ConfiguredAwaitable_NullFunc_ThrowsArgumentNullException()
+    {
+        Assert.Throws<ArgumentNullException>(
+            () => Result.FromAsync((Func<System.Runtime.CompilerServices.ConfiguredTaskAwaitable<int>>)null!));
+    }
+
+    [Fact]
+    public async Task Pipeline_FromAsync_OverloadResolution_PicksExpectedOverloadForTaskFactory()
+    {
+        Func<Task<int>> taskFactory = () => Task.FromResult(7);
+
+        var result = await Result.FromAsync(taskFactory).Try();
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(7, result.Value);
+    }
+
     private static Task<Result<int>> GetSuccessAsync(int value) =>
         Task.FromResult(Result<int>.Success(value));
 

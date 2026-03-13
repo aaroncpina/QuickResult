@@ -157,6 +157,12 @@ var chosen = Result.Failure("primary failed") | Result.Success(10); // Success(1
 var userResult = await Result.FromAsync(() => repository.GetUserByIdAsync(userId, ct))
                              .Try()
                              .WhenNull("User not found");
+
+// Works with Task<T>
+var p1 = Result.FromAsync(() => SomeCallAsync());
+
+// Also works with ConfigureAwait(...)
+var p2 = Result.FromAsync(() => SomeCallAsync().ConfigureAwait(false));
 ```
 
 ### 9.2) LINQ query with pipelines

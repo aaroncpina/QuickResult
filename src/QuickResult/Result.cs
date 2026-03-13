@@ -1,5 +1,6 @@
-using System;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using System;
 
 namespace QuickResult;
 
@@ -427,5 +428,21 @@ public static class Result
     {
         ArgumentNullException.ThrowIfNull(func);
         return new ResultPipeline<T>(func);
+    }
+
+    /// <summary>
+    /// Creates a pipeline source from an asynchronous function that already applies
+    /// <c>ConfigureAwait(...)</c>.
+    /// </summary>
+    /// <typeparam name="T">Type produced by <paramref name="func"/>.</typeparam>
+    /// <param name="func">
+    /// Function returning a configured awaitable (for example:
+    /// <c>() => SomeTaskReturningMethod().ConfigureAwait(false)</c>).
+    /// </param>
+    /// <returns>A composable pipeline source.</returns>
+    public static ResultPipeline<T> FromAsync<T>(Func<ConfiguredTaskAwaitable<T>> func)
+    {
+        ArgumentNullException.ThrowIfNull(func);
+        return new ResultPipeline<T>(async () => await func());
     }
 }
