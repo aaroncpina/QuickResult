@@ -60,6 +60,9 @@ var message = result.Match(
 | `Result.Try(...)` | Wrap sync `Func<T>` or `Action` in try/catch and return result |
 | `Result.TryAsync(...)` | Wrap async `Func<Task<T>>` or `Func<Task>` in try/catch and return result |
 | `left \| right` | Fallback to `right` if `left` failed |
+| `Result.From(...)` / `Result.FromAsync(...)` | Start a composable pipeline from sync/async value factories |
+| `pipeline.Try()` | Execute pipeline and convert thrown exceptions into `Failure(...)` |
+| `result.WhenNull(error)` | Convert successful nullable result into `Failure(error)` when null |
 
 ---
 
@@ -148,6 +151,28 @@ var parsed = Result.Success("25").Bind(ParsePositiveInt);
 var chosen = Result.Failure("primary failed") | Result.Success(10); // Success(10)
 ```
 
+### 9.1) Pipeline start + Try + WhenNull
+
+```csharp
+var userResult = await Result.FromAsync(() => repository.GetUserByIdAsync(userId, ct))
+                             .Try()
+                             .WhenNull("User not found");
+```
+
+### 9.2) LINQ query with pipelines
+
+```csharp
+var query = from val1 in Result.FromAsync(() => service.GetValue1Async(ct))
+                               .Try()
+                               .WhenNull("Value1 was null")
+            from val2 in Result.FromAsync(() => service.GetValue2Async(ct))
+                               .Try()
+                               .WhenNull("Value2 was null")
+            select val1 + val2;
+
+var result = await query;
+```
+
 ---
 
 ## LINQ Support
@@ -196,6 +221,8 @@ var result = await query; // Success(12)
 - `Try/TryAsync` support both value-returning and no-value (`Unit`) operations.
 - If an exception message is null/whitespace, `Try/TryAsync` use the exception type name as the failure message.
 - Failure short-circuits through `Map`, `Bind`, and LINQ query chains.
+- `Result.From/FromAsync` create deferred pipelines. Pair with `.Try()` to convert thrown exceptions into failures.
+- `WhenNull(error)` converts a successful nullable result into `Failure(error)` when the value is null.
 
 ---
 

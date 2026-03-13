@@ -404,4 +404,28 @@ public static class Result
             return Failure<Unit>(message);
         }
     }
+
+    /// <summary>
+    /// Creates a pipeline source from a synchronous function.
+    /// </summary>
+    /// <typeparam name="T">Type produced by <paramref name="func"/>.</typeparam>
+    /// <param name="func">Function to execute later in pipeline.</param>
+    /// <returns>A composable pipeline source.</returns>
+    public static ResultPipeline<T> From<T>(Func<T> func)
+    {
+        ArgumentNullException.ThrowIfNull(func);
+        return new ResultPipeline<T>(() => Task.FromResult(func()));
+    }
+
+    /// <summary>
+    /// Creates a pipeline source from an asynchronous function.
+    /// </summary>
+    /// <typeparam name="T">Type produced by <paramref name="func"/>.</typeparam>
+    /// <param name="func">Asynchronous function to execute later in pipeline.</param>
+    /// <returns>A composable pipeline source.</returns>
+    public static ResultPipeline<T> FromAsync<T>(Func<Task<T>> func)
+    {
+        ArgumentNullException.ThrowIfNull(func);
+        return new ResultPipeline<T>(func);
+    }
 }
