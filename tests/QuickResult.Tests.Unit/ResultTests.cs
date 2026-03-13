@@ -454,13 +454,129 @@ public class ResultTests
     {
         var query =
             from a in GetSuccessAsync(4)                   // async source
-            from b in Result<int>.Failure("mixed fail")       // sync bind
+            from b in Result<int>.Failure("mixed fail")    // sync bind
             select a + b;
 
         var result = await query;
 
         Assert.True(result.IsFailure);
         Assert.Equal("mixed fail", result.Error);
+    }
+
+    [Fact]
+    public async Task Pipeline_From_Try_WhenSucceeds_ReturnsSuccess()
+    {
+        var result = await Result.From(() => 21).Try();
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(21, result.Value);
+    }
+
+    [Fact]
+    public async Task Pipeline_From_Try_WhenThrows_ReturnsFailure()
+    {
+        var result = await Result.From<int>(() => throw new InvalidOperationException("boom")).Try();
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("boom", result.Error);
+    }
+
+    [Fact]
+    public async Task Pipeline_FromAsync_Try_WhenSucceeds_ReturnsSuccess()
+    {
+        var result = await Result.FromAsync(async () =>
+        {
+            await Task.Delay(1);
+            return 42;
+        }).Try();
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(42, result.Value);
+    }
+
+    [Fact]
+    public async Task Pipeline_FromAsync_Try_WhenThrows_ReturnsFailure()
+    {
+        var result = await Result.FromAsync<int>(async () =>
+        {
+            await Task.Delay(1);
+            throw new InvalidOperationException("boom");
+        }).Try();
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("boom", result.Error);
+    }
+
+    [Fact]
+    public async Task Pipeline_WhenNull_Reference_WhenNull_ReturnsFailure()
+    {
+        var result = await Result.FromAsync(() => Task.FromResult<string?>(null))
+                                 .Try()
+                                 .WhenNull("missing");
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("missing", result.Error);
+    }
+
+    [Fact]
+    public async Task Pipeline_WhenNull_Reference_WhenNotNull_ReturnsSuccess()
+    {
+        var result = await Result.FromAsync(() => Task.FromResult<string?>("ok"))
+                                 .Try()
+                                 .WhenNull("missing");
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("ok", result.Value);
+    }
+
+    [Fact]
+    public async Task Pipeline_WhenNull_ValueType_WhenNull_ReturnsFailure()
+    {
+        var result = await Result.FromAsync(() => Task.FromResult<int?>(null))
+                                 .Try()
+                                 .WhenNull("missing");
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("missing", result.Error);
+    }
+
+    [Fact]
+    public async Task Pipeline_WhenNull_ValueType_WhenHasValue_ReturnsSuccess()
+    {
+        var result = await Result.FromAsync(() => Task.FromResult<int?>(7))
+                                 .Try()
+                                 .WhenNull("missing");
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(7, result.Value);
+    }
+
+    [Fact]
+    public async Task Pipeline_Linq_ComposesTryAndWhenNull()
+    {
+        var query =
+            from a in Result.FromAsync(() => Task.FromResult<int?>(4)).Try().WhenNull("a missing")
+            from b in Result.FromAsync(() => Task.FromResult<int?>(6)).Try().WhenNull("b missing")
+            select a + b;
+
+        var result = await query;
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(10, result.Value);
+    }
+
+    [Fact]
+    public async Task Pipeline_Linq_PropagatesWhenNullFailure()
+    {
+        var query =
+            from a in Result.FromAsync(() => Task.FromResult<int?>(4)).Try().WhenNull("a missing")
+            from b in Result.FromAsync(() => Task.FromResult<int?>(null)).Try().WhenNull("b missing")
+            select a + b;
+
+        var result = await query;
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("b missing", result.Error);
     }
 
     private static Task<Result<int>> GetSuccessAsync(int value) =>
