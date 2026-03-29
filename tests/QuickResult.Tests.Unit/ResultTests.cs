@@ -39,7 +39,7 @@ public class ResultTests
         var result = Result.Try(() => throw new InvalidOperationException("boom"));
 
         Assert.True(result.IsFailure);
-        Assert.Equal("boom", result.Error);
+        Assert.Equal("boom", result.Error.Message);
     }
 
     [Fact]
@@ -68,7 +68,7 @@ public class ResultTests
         });
 
         Assert.True(result.IsFailure);
-        Assert.Equal("boom", result.Error);
+        Assert.Equal("boom", result.Error.Message);
     }
 
     [Fact]
@@ -90,7 +90,7 @@ public class ResultTests
         var result = Result.FromNullable(value, "missing");
 
         Assert.True(result.IsFailure);
-        Assert.Equal("missing", result.Error);
+        Assert.Equal("missing", result.Error.Message);
     }
 
     [Fact]
@@ -112,7 +112,7 @@ public class ResultTests
         var result = Result.FromNullable(value, "missing");
 
         Assert.True(result.IsFailure);
-        Assert.Equal("missing", result.Error);
+        Assert.Equal("missing", result.Error.Message);
     }
 
     [Fact]
@@ -132,7 +132,7 @@ public class ResultTests
 
         Assert.True(result.IsFailure);
         Assert.False(result.IsSuccess);
-        Assert.Equal("boom", result.Error);
+        Assert.Equal("boom", result.Error.Message);
     }
 
     [Fact]
@@ -160,7 +160,7 @@ public class ResultTests
 
         Assert.True(result.IsFailure);
         Assert.False(result.IsSuccess);
-        Assert.Equal("boom", result.Error);
+        Assert.Equal("boom", result.Error.Message);
     }
 
     [Fact]
@@ -170,7 +170,7 @@ public class ResultTests
 
         Assert.True(result.IsFailure);
         Assert.False(result.IsSuccess);
-        Assert.Equal("boom", result.Error);
+        Assert.Equal("boom", result.Error.Message);
     }
 
     [Fact]
@@ -196,7 +196,7 @@ public class ResultTests
 
         var text = result.Match(
             onSuccess: v => $"ok:{v}",
-            onFailure: e => $"err:{e}");
+            onFailure: e => $"err:{e.Message}");
 
         Assert.Equal("ok:5", text);
     }
@@ -208,7 +208,7 @@ public class ResultTests
 
         var text = result.Match(
             onSuccess: v => $"ok:{v}",
-            onFailure: e => $"err:{e}");
+            onFailure: e => $"err:{e.Message}");
 
         Assert.Equal("err:bad", text);
     }
@@ -220,7 +220,7 @@ public class ResultTests
 
         var text = await result.MatchAsync(
             onSuccess: v => Task.FromResult($"ok:{v}"),
-            onFailure: e => Task.FromResult($"err:{e}"));
+            onFailure: e => Task.FromResult($"err:{e.Message}"));
 
         Assert.Equal("ok:5", text);
     }
@@ -232,7 +232,7 @@ public class ResultTests
 
         var text = await result.MatchAsync(
             onSuccess: v => Task.FromResult($"ok:{v}"),
-            onFailure: e => Task.FromResult($"err:{e}"));
+            onFailure: e => Task.FromResult($"err:{e.Message}"));
 
         Assert.Equal("err:bad", text);
     }
@@ -244,7 +244,7 @@ public class ResultTests
 
         var text = await result.MatchAsync(
             onSuccess: v => Task.FromResult($"ok:{v}"),
-            onFailure: e => $"err:{e}");
+            onFailure: e => $"err:{e.Message}");
 
         Assert.Equal("err:bad", text);
     }
@@ -256,7 +256,7 @@ public class ResultTests
 
         var text = await result.MatchAsync(
             onSuccess: v => $"ok:{v}",
-            onFailure: e => Task.FromResult($"err:{e}"));
+            onFailure: e => Task.FromResult($"err:{e.Message}"));
 
         Assert.Equal("ok:5", text);
     }
@@ -267,7 +267,7 @@ public class ResultTests
         var text = await Task.FromResult(Result<int>.Success(5))
             .MatchAsync(
                 onSuccess: v => Task.FromResult($"ok:{v}"),
-                onFailure: e => Task.FromResult($"err:{e}"));
+                onFailure: e => Task.FromResult($"err:{e.Message}"));
 
         Assert.Equal("ok:5", text);
     }
@@ -278,7 +278,7 @@ public class ResultTests
         var text = await Task.FromResult(Result<int>.Failure("bad"))
             .MatchAsync(
                 onSuccess: v => Task.FromResult($"ok:{v}"),
-                onFailure: e => Task.FromResult($"err:{e}"));
+                onFailure: e => Task.FromResult($"err:{e.Message}"));
 
         Assert.Equal("err:bad", text);
     }
@@ -289,7 +289,7 @@ public class ResultTests
         var text = await Task.FromResult(Result<int>.Failure("bad"))
             .MatchAsync(
                 onSuccess: v => Task.FromResult($"ok:{v}"),
-                onFailure: e => $"err:{e}");
+                onFailure: e => $"err:{e.Message}");
 
         Assert.Equal("err:bad", text);
     }
@@ -300,7 +300,7 @@ public class ResultTests
         var text = await Task.FromResult(Result<int>.Success(5))
             .MatchAsync(
                 onSuccess: v => $"ok:{v}",
-                onFailure: e => Task.FromResult($"err:{e}"));
+                onFailure: e => Task.FromResult($"err:{e.Message}"));
 
         Assert.Equal("ok:5", text);
     }
@@ -311,7 +311,7 @@ public class ResultTests
         var text = await Task.FromResult(Result<int>.Failure("bad"))
             .MatchAsync(
                 onSuccess: v => $"ok:{v}",
-                onFailure: e => $"err:{e}");
+                onFailure: e => $"err:{e.Message}");
 
         Assert.Equal("err:bad", text);
     }
@@ -338,7 +338,7 @@ public class ResultTests
                             select left + right)
                            .MatchAsync(
                                 onSuccess: val => $"success: {val}",
-                                onFailure: err => $"failure: {err}");
+                                onFailure: err => $"failure: {err.Message}");
 
         Assert.Equal("success: 42", result);
     }
@@ -351,7 +351,7 @@ public class ResultTests
                             select left + right)
                            .MatchAsync(
                                 onSuccess: val => $"success: {val}",
-                                onFailure: err => $"failure: {err}");
+                                onFailure: err => $"failure: {err.Message}");
 
         Assert.Equal("failure: projection failed", result);
     }
@@ -367,7 +367,7 @@ public class ResultTests
         var result = await query;
 
         Assert.True(result.IsFailure);
-        Assert.Equal("projection failed", result.Error);
+        Assert.Equal("projection failed", result.Error.Message);
     }
 
     [Fact]
@@ -375,10 +375,10 @@ public class ResultTests
     {
         var result = Result<int>.Failure("boom");
 
-        var mapped = result.MapFailure(e => $"wrapped:{e}");
+        var mapped = result.MapFailure(e => new Error($"wrapped:{e.Message}"));
 
         Assert.True(mapped.IsFailure);
-        Assert.Equal("wrapped:boom", mapped.Error);
+        Assert.Equal("wrapped:boom", mapped.Error.Message);
     }
 
     [Fact]
@@ -386,7 +386,7 @@ public class ResultTests
     {
         var result = Result<int>.Success(7);
 
-        var mapped = result.MapFailure(e => $"wrapped:{e}");
+        var mapped = result.MapFailure(e => new Error($"wrapped:{e.Message}"));
 
         Assert.True(mapped.IsSuccess);
         Assert.Equal(7, mapped.Value);
@@ -417,7 +417,7 @@ public class ResultTests
     {
         var result = Result<int>.Failure("bad");
 
-        var value = result.ValueOr(e => e.Length);
+        var value = result.ValueOr(e => e.Message.Length);
 
         Assert.Equal(3, value);
     }
@@ -430,7 +430,7 @@ public class ResultTests
         var mapped = result.Map(v => v * 10);
 
         Assert.True(mapped.IsFailure);
-        Assert.Equal("map fail", mapped.Error);
+        Assert.Equal("map fail", mapped.Error.Message);
     }
 
     [Fact]
@@ -452,7 +452,7 @@ public class ResultTests
         var bound = result.Bind(v => Result<string>.Success($"v:{v}"));
 
         Assert.True(bound.IsFailure);
-        Assert.Equal("bind fail", bound.Error);
+        Assert.Equal("bind fail", bound.Error.Message);
     }
 
     [Fact]
@@ -488,7 +488,7 @@ public class ResultTests
         var chosen = left | right;
 
         Assert.True(chosen.IsFailure);
-        Assert.Equal("right fail", chosen.Error);
+        Assert.Equal("right fail", chosen.Error.Message);
     }
 
     [Fact]
@@ -512,7 +512,7 @@ public class ResultTests
             select a + b;
 
         Assert.True(query.IsFailure);
-        Assert.Equal("sync fail", query.Error);
+        Assert.Equal("sync fail", query.Error.Message);
     }
 
     [Fact]
@@ -540,7 +540,7 @@ public class ResultTests
         var result = await query;
 
         Assert.True(result.IsFailure);
-        Assert.Equal("async fail", result.Error);
+        Assert.Equal("async fail", result.Error.Message);
     }
 
     [Fact]
@@ -569,7 +569,7 @@ public class ResultTests
         var result = await query;
 
         Assert.True(result.IsFailure);
-        Assert.Equal("mixed fail", result.Error);
+        Assert.Equal("mixed fail", result.Error.Message);
     }
 
     [Fact]
@@ -587,7 +587,7 @@ public class ResultTests
         var result = await Result.From<int>(() => throw new InvalidOperationException("boom")).Try();
 
         Assert.True(result.IsFailure);
-        Assert.Equal("boom", result.Error);
+        Assert.Equal("boom", result.Error.Message);
     }
 
     [Fact]
@@ -613,7 +613,7 @@ public class ResultTests
         }).Try();
 
         Assert.True(result.IsFailure);
-        Assert.Equal("boom", result.Error);
+        Assert.Equal("boom", result.Error.Message);
     }
 
     [Fact]
@@ -624,7 +624,7 @@ public class ResultTests
                                  .WhenNull("missing");
 
         Assert.True(result.IsFailure);
-        Assert.Equal("missing", result.Error);
+        Assert.Equal("missing", result.Error.Message);
     }
 
     [Fact]
@@ -646,7 +646,7 @@ public class ResultTests
                                  .WhenNull("missing");
 
         Assert.True(result.IsFailure);
-        Assert.Equal("missing", result.Error);
+        Assert.Equal("missing", result.Error.Message);
     }
 
     [Fact]
@@ -685,7 +685,7 @@ public class ResultTests
         var result = await query;
 
         Assert.True(result.IsFailure);
-        Assert.Equal("b missing", result.Error);
+        Assert.Equal("b missing", result.Error.Message);
     }
 
     [Fact]
@@ -705,7 +705,7 @@ public class ResultTests
         ).Try();
 
         Assert.True(result.IsFailure);
-        Assert.Equal("boom", result.Error);
+        Assert.Equal("boom", result.Error.Message);
     }
 
     [Fact]
@@ -732,7 +732,7 @@ public class ResultTests
         var result = Result.Success(true).FailIfTrue("value was true");
 
         Assert.True(result.IsFailure);
-        Assert.Equal("value was true", result.Error);
+        Assert.Equal("value was true", result.Error.Message);
     }
 
     [Fact]
@@ -750,7 +750,7 @@ public class ResultTests
         var result = Result.Failure<bool>("upstream fail").FailIfTrue("value was true");
 
         Assert.True(result.IsFailure);
-        Assert.Equal("upstream fail", result.Error);
+        Assert.Equal("upstream fail", result.Error.Message);
     }
 
     [Fact]
@@ -759,7 +759,7 @@ public class ResultTests
         var result = await Task.FromResult(Result.Success(true)).FailIfTrue("value was true");
 
         Assert.True(result.IsFailure);
-        Assert.Equal("value was true", result.Error);
+        Assert.Equal("value was true", result.Error.Message);
     }
 
     [Fact]
@@ -777,7 +777,7 @@ public class ResultTests
         var result = await Task.FromResult(Result.Failure<bool>("upstream fail")).FailIfTrue("value was true");
 
         Assert.True(result.IsFailure);
-        Assert.Equal("upstream fail", result.Error);
+        Assert.Equal("upstream fail", result.Error.Message);
     }
 
     [Fact]
@@ -786,7 +786,7 @@ public class ResultTests
         var result = Result.Success(false).FailIfFalse("value was false");
 
         Assert.True(result.IsFailure);
-        Assert.Equal("value was false", result.Error);
+        Assert.Equal("value was false", result.Error.Message);
     }
 
     [Fact]
@@ -804,7 +804,7 @@ public class ResultTests
         var result = Result.Failure<bool>("upstream fail").FailIfFalse("value was false");
 
         Assert.True(result.IsFailure);
-        Assert.Equal("upstream fail", result.Error);
+        Assert.Equal("upstream fail", result.Error.Message);
     }
 
     [Fact]
@@ -813,7 +813,7 @@ public class ResultTests
         var result = await Task.FromResult(Result.Success(false)).FailIfFalse("value was false");
 
         Assert.True(result.IsFailure);
-        Assert.Equal("value was false", result.Error);
+        Assert.Equal("value was false", result.Error.Message);
     }
 
     [Fact]
@@ -831,7 +831,7 @@ public class ResultTests
         var result = await Task.FromResult(Result.Failure<bool>("upstream fail")).FailIfFalse("value was false");
 
         Assert.True(result.IsFailure);
-        Assert.Equal("upstream fail", result.Error);
+        Assert.Equal("upstream fail", result.Error.Message);
     }
 
     [Fact]
@@ -844,7 +844,7 @@ public class ResultTests
         var result = await query;
 
         Assert.True(result.IsFailure);
-        Assert.Equal("documents still owned", result.Error);
+        Assert.Equal("documents still owned", result.Error.Message);
     }
 
     [Fact]

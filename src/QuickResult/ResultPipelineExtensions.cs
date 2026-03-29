@@ -9,8 +9,14 @@ namespace QuickResult;
 public static class ResultPipelineExtensions
 {
     /// <summary>
-    /// Executes pipeline and captures thrown exceptions as failure.
+    /// Executes the pipeline and captures any thrown exception as a failure.
     /// </summary>
+    /// <typeparam name="T">Type of the produced value.</typeparam>
+    /// <param name="pipeline">The deferred pipeline to execute.</param>
+    /// <returns>
+    /// A task that resolves to <see cref="Result{T}"/> containing the produced value on success,
+    /// or a failure with the exception message when an exception is thrown.
+    /// </returns>
     public static async Task<Result<T>> Try<T>(this ResultPipeline<T> pipeline)
     {
         try
@@ -25,8 +31,16 @@ public static class ResultPipelineExtensions
     }
 
     /// <summary>
-    /// Converts a successful nullable reference value to failure when null.
+    /// Converts a successful nullable reference result into a failure when the value is <see langword="null"/>.
+    /// Existing failures are propagated unchanged.
     /// </summary>
+    /// <typeparam name="T">Type of the non-null success value.</typeparam>
+    /// <param name="source">Asynchronous source result containing a nullable reference value.</param>
+    /// <param name="error">Failure message used when the value is <see langword="null"/>.</param>
+    /// <returns>
+    /// A task that resolves to a successful result with a non-null value,
+    /// or a failure if the value was null or the source was already failed.
+    /// </returns>
     public static async Task<Result<T>> WhenNull<T>(this Task<Result<T?>> source, string error)
         where T : class
     {
@@ -36,8 +50,16 @@ public static class ResultPipelineExtensions
     }
 
     /// <summary>
-    /// Converts a successful nullable value type to failure when null.
+    /// Converts a successful nullable value-type result into a failure when the value is <see langword="null"/>.
+    /// Existing failures are propagated unchanged.
     /// </summary>
+    /// <typeparam name="T">Type of the underlying value type.</typeparam>
+    /// <param name="source">Asynchronous source result containing a nullable value type.</param>
+    /// <param name="error">Failure message used when the value is <see langword="null"/>.</param>
+    /// <returns>
+    /// A task that resolves to a successful result with the unwrapped value,
+    /// or a failure if the value had no value or the source was already failed.
+    /// </returns>
     public static async Task<Result<T>> WhenNull<T>(this Task<Result<T?>> source, string error)
         where T : struct
     {

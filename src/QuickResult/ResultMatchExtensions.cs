@@ -26,7 +26,7 @@ public static class ResultMatchExtensions
     public static TResult Match<T, TResult>(
         this Result<T> source,
         Func<T, TResult> onSuccess,
-        Func<string, TResult> onFailure)
+        Func<IError, TResult> onFailure)
     {
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(onSuccess);
@@ -42,14 +42,14 @@ public static class ResultMatchExtensions
     /// <param name="source">Source result to branch on.</param>
     /// <param name="onSuccess">Asynchronous delegate invoked when <paramref name="source"/> is successful.</param>
     /// <param name="onFailure">Asynchronous delegate invoked when <paramref name="source"/> is failed.</param>
-    /// <returns>A task resolving to the value returned by the executed delegate.</returns>
+    /// <returns>A task that resolves to the value returned by the executed delegate.</returns>
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="source"/>, <paramref name="onSuccess"/>, or <paramref name="onFailure"/> is <see langword="null"/>.
     /// </exception>
     public static Task<TResult> MatchAsync<T, TResult>(
         this Result<T> source,
         Func<T, Task<TResult>> onSuccess,
-        Func<string, Task<TResult>> onFailure)
+        Func<IError, Task<TResult>> onFailure)
     {
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(onSuccess);
@@ -66,14 +66,14 @@ public static class ResultMatchExtensions
     /// <param name="source">Source result to branch on.</param>
     /// <param name="onSuccess">Asynchronous delegate invoked when <paramref name="source"/> is successful.</param>
     /// <param name="onFailure">Synchronous delegate invoked when <paramref name="source"/> is failed.</param>
-    /// <returns>A task resolving to the value returned by the executed delegate.</returns>
+    /// <returns>A task that resolves to the value returned by the executed delegate.</returns>
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="source"/>, <paramref name="onSuccess"/>, or <paramref name="onFailure"/> is <see langword="null"/>.
     /// </exception>
     public static Task<TResult> MatchAsync<T, TResult>(
         this Result<T> source,
         Func<T, Task<TResult>> onSuccess,
-        Func<string, TResult> onFailure)
+        Func<IError, TResult> onFailure)
     {
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(onSuccess);
@@ -90,14 +90,14 @@ public static class ResultMatchExtensions
     /// <param name="source">Source result to branch on.</param>
     /// <param name="onSuccess">Synchronous delegate invoked when <paramref name="source"/> is successful.</param>
     /// <param name="onFailure">Asynchronous delegate invoked when <paramref name="source"/> is failed.</param>
-    /// <returns>A task resolving to the value returned by the executed delegate.</returns>
+    /// <returns>A task that resolves to the value returned by the executed delegate.</returns>
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="source"/>, <paramref name="onSuccess"/>, or <paramref name="onFailure"/> is <see langword="null"/>.
     /// </exception>
     public static Task<TResult> MatchAsync<T, TResult>(
         this Result<T> source,
         Func<T, TResult> onSuccess,
-        Func<string, Task<TResult>> onFailure)
+        Func<IError, Task<TResult>> onFailure)
     {
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(onSuccess);
@@ -111,17 +111,17 @@ public static class ResultMatchExtensions
     /// </summary>
     /// <typeparam name="T">Type of the success value in the source result.</typeparam>
     /// <typeparam name="TResult">Type produced by either branch delegate.</typeparam>
-    /// <param name="source">Asynchronous source result.</param>
-    /// <param name="onSuccess">Asynchronous delegate invoked when the awaited source is successful.</param>
-    /// <param name="onFailure">Asynchronous delegate invoked when the awaited source is failed.</param>
-    /// <returns>A task resolving to the value returned by the executed delegate.</returns>
+    /// <param name="source">Asynchronous source result to branch on.</param>
+    /// <param name="onSuccess">Asynchronous delegate invoked when the result is successful.</param>
+    /// <param name="onFailure">Asynchronous delegate invoked when the result is failed.</param>
+    /// <returns>A task that resolves to the value returned by the executed delegate.</returns>
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="source"/>, <paramref name="onSuccess"/>, or <paramref name="onFailure"/> is <see langword="null"/>.
     /// </exception>
     public static async Task<TResult> MatchAsync<T, TResult>(
         this Task<Result<T>> source,
         Func<T, Task<TResult>> onSuccess,
-        Func<string, Task<TResult>> onFailure)
+        Func<IError, Task<TResult>> onFailure)
     {
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(onSuccess);
@@ -137,17 +137,17 @@ public static class ResultMatchExtensions
     /// </summary>
     /// <typeparam name="T">Type of the success value in the source result.</typeparam>
     /// <typeparam name="TResult">Type produced by either branch delegate.</typeparam>
-    /// <param name="source">Asynchronous source result.</param>
-    /// <param name="onSuccess">Asynchronous delegate invoked when the awaited source is successful.</param>
-    /// <param name="onFailure">Synchronous delegate invoked when the awaited source is failed.</param>
-    /// <returns>A task resolving to the value returned by the executed delegate.</returns>
+    /// <param name="source">Asynchronous source result to branch on.</param>
+    /// <param name="onSuccess">Asynchronous delegate invoked when the result is successful.</param>
+    /// <param name="onFailure">Synchronous delegate invoked when the result is failed.</param>
+    /// <returns>A task that resolves to the value returned by the executed delegate.</returns>
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="source"/>, <paramref name="onSuccess"/>, or <paramref name="onFailure"/> is <see langword="null"/>.
     /// </exception>
     public static async Task<TResult> MatchAsync<T, TResult>(
         this Task<Result<T>> source,
         Func<T, Task<TResult>> onSuccess,
-        Func<string, TResult> onFailure)
+        Func<IError, TResult> onFailure)
     {
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(onSuccess);
@@ -163,17 +163,17 @@ public static class ResultMatchExtensions
     /// </summary>
     /// <typeparam name="T">Type of the success value in the source result.</typeparam>
     /// <typeparam name="TResult">Type produced by either branch delegate.</typeparam>
-    /// <param name="source">Asynchronous source result.</param>
-    /// <param name="onSuccess">Synchronous delegate invoked when the awaited source is successful.</param>
-    /// <param name="onFailure">Asynchronous delegate invoked when the awaited source is failed.</param>
-    /// <returns>A task resolving to the value returned by the executed delegate.</returns>
+    /// <param name="source">Asynchronous source result to branch on.</param>
+    /// <param name="onSuccess">Synchronous delegate invoked when the result is successful.</param>
+    /// <param name="onFailure">Asynchronous delegate invoked when the result is failed.</param>
+    /// <returns>A task that resolves to the value returned by the executed delegate.</returns>
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="source"/>, <paramref name="onSuccess"/>, or <paramref name="onFailure"/> is <see langword="null"/>.
     /// </exception>
     public static async Task<TResult> MatchAsync<T, TResult>(
         this Task<Result<T>> source,
         Func<T, TResult> onSuccess,
-        Func<string, Task<TResult>> onFailure)
+        Func<IError, Task<TResult>> onFailure)
     {
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(onSuccess);
@@ -184,21 +184,21 @@ public static class ResultMatchExtensions
     }
 
     /// <summary>
-    /// Projects an asynchronous result source into a single asynchronous value using two synchronous delegates.
+    /// Projects an asynchronous result source into a single value using two synchronous delegates.
     /// </summary>
     /// <typeparam name="T">Type of the success value in the source result.</typeparam>
     /// <typeparam name="TResult">Type produced by either branch delegate.</typeparam>
-    /// <param name="source">Asynchronous source result.</param>
-    /// <param name="onSuccess">Synchronous delegate invoked when the awaited source is successful.</param>
-    /// <param name="onFailure">Synchronous delegate invoked when the awaited source is failed.</param>
-    /// <returns>A task resolving to the value returned by the executed delegate.</returns>
+    /// <param name="source">Asynchronous source result to branch on.</param>
+    /// <param name="onSuccess">Synchronous delegate invoked when the result is successful.</param>
+    /// <param name="onFailure">Synchronous delegate invoked when the result is failed.</param>
+    /// <returns>A task that resolves to the value returned by the executed delegate.</returns>
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="source"/>, <paramref name="onSuccess"/>, or <paramref name="onFailure"/> is <see langword="null"/>.
     /// </exception>
     public static async Task<TResult> MatchAsync<T, TResult>(
         this Task<Result<T>> source,
         Func<T, TResult> onSuccess,
-        Func<string, TResult> onFailure)
+        Func<IError, TResult> onFailure)
     {
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(onSuccess);

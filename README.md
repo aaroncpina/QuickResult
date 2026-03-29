@@ -16,6 +16,7 @@ Lightweight `Result<T>` for C# with full LINQ query syntax support for **sync**,
 - ✅ Keep happy-path and error-path close together
 - ✅ Compose operations with `Map`, `Bind`, and LINQ queries
 - ✅ Works naturally with async workflows
+- ✅ Extensible error types via `IError` — use pattern matching (`is`, `as`, `switch`) on failures
 
 ---
 
@@ -40,22 +41,62 @@ var message = result.Match(
 
 ---
 
+## Custom Error Types
+
+Implement `IError` to create domain-specific errors:
+
+```csharp
+public class HttpResponseError : IError
+{
+    public string Message { get; }
+    public int StatusCode { get; }
+
+    public HttpResponseError(int statusCode, string message)
+    {
+        StatusCode = statusCode;
+        Message    = message;
+    }
+}
+
+// Use it directly:
+var result = Result.Failure(new HttpResponseError(503, "Service unavailable"));
+
+// Transform failures within a pipeline
+var mapped = result.MapFailure(e => e switch
+{
+    HttpResponseError { StatusCode: 503 } => new Error("Try again later"),
+    _                                     => e
+});
+
+// Or pattern match when consuming the error
+if (result.IsFailure && result.Error is HttpResponseError http)
+    Console.WriteLine($"HTTP {http.StatusCode}: {http.Message}");
+```
+
+Plain strings still work — they're implicitly wrapped in the built-in `Error` class:
+
+```csharp
+var fail = Result<int>.Failure("Something went wrong"); // just works
+```
+
+---
+
 ## Core API
 
 | Member | Purpose |
 |---|---|
 | `Result<T>.Success(value)` | Create a successful result |
 | `Result.Success()` | Create a successful `Result<Unit>` |
-| `Result<T>.Failure(error)` | Create a failed result |
+| `Result<T>.Failure(error)` | Create a failed result (accepts `IError` or `string`) |
 | `Result.FromNullable(value, error)` | Convert nullable reference/value types into `Result<T>` |
 | `IsSuccess` / `IsFailure` | Check result state |
 | `Value` | Get success value (throws on failure) |
-| `Error` | Get error message (throws on success) |
+| `Error` | Get `IError` (throws on success) |
 | `Match(...)` | Convert both branches to one value |
 | `MatchAsync(...)` | Async version of match (supports async branches) |
 | `ValueOr(...)` | Get value or fallback |
 | `Map(...)` | Transform success value |
-| `MapFailure(...)` | Transform failure message |
+| `MapFailure(...)` | Transform failure error |
 | `Bind(...)` | Chain result-returning functions |
 | `Result.Try(...)` | Wrap sync `Func<T>` or `Action` in try/catch and return result |
 | `Result.TryAsync(...)` | Wrap async `Func<Task<T>>` or `Func<Task>` in try/catch and return result |
@@ -103,7 +144,7 @@ var ping = await Result.TryAsync(async () => { await Task.Delay(10); }); // Resu
 ```csharp
 string text = ok.Match(
     onSuccess: v => $"Value: {v}",
-    onFailure: e => $"Error: {e}");
+    onFailure: e => $"Error: {e.Message}");
 ```
 
 ### 4.2) Match async branches (`Result<T>` source)
@@ -111,7 +152,7 @@ string text = ok.Match(
 ```csharp
 var text = await ok.MatchAsync(
     onSuccess: v => Task.FromResult("Value: {v}"),
-    onFailure: e => Task.FromResult("Error: {e}"));
+    onFailure: e => Task.FromResult("Error: {e.Message}"));
 ```
 
 ### 4.3) Match directly on `Task<Result<T>>` (fluent)
@@ -119,7 +160,7 @@ var text = await ok.MatchAsync(
 ```csharp
 var text = await GetSuccessAsync(11).MatchAsync(
     onSuccess: v => "success: {v}",
-    onFailure: e => "failure: {e}");
+    onFailure: e => "failure: {e.Message}");
 ```
 
 ### 5.1) Map
@@ -131,7 +172,7 @@ var length = Result.Success("hello").Map(s => s.Length); // Success(5)
 ### 5.2) Map failure
 
 ```csharp
-var mappedError = Result.Failure("boom").MapFailure(e => $"wrapped: {e}"); // Failure("wrapped: boom")
+var mappedError = Result.Failure("boom").MapFailure(e => new Error( $"wrapped: {e.Message}")); // Failure("wrapped: boom")
 ```
 
 ### 6) ValueOr
@@ -139,7 +180,7 @@ var mappedError = Result.Failure("boom").MapFailure(e => $"wrapped: {e}"); // Fa
 ```csharp
 var value1 = Result.Success(10).ValueOr(0); // 10
 var value2 = Result.Failure("bad").ValueOr(0); // 0
-var value3 = Result.Failure("bad").ValueOr(e => e.Length); // 3
+var value3 = Result.Failure("bad").ValueOr(e => e.Message.Length); // 3
 ```
 
 ### 7) Bind
@@ -250,7 +291,7 @@ var text = await (from left in GetAsync(11)
                   select left + right)
                  .MatchAsync(
                       onSuccess: v => "success: {v}",
-                      onFailure: e => "failure: {e}");
+                      onFailure: e => "failure: {e.Message}");
 ```
 
 ### Mixed sync/async query
@@ -270,7 +311,8 @@ var result = await query; // Success(12)
 
 - `Value` throws `InvalidOperationException` when result is failure.
 - `Error` throws `InvalidOperationException` when result is success.
-- `Failure(error)` throws `ArgumentException` if `error` is null/empty/whitespace.
+- `Failure(error)` throws `ArgumentException` if error message is null/empty/whitespace.
+- `Failure(string)` implicitly wraps the string in the default `Error` type.
 - `Result.FromNullable(value, error)` returns `Failure(error)` when the nullable input is null.
 - `Result.Try(...)` and `Result.TryAsync(...)` convert thrown exceptions into `Failure(...)` using the exception message.
 - `Try/TryAsync` support both value-returning and no-value (`Unit`) operations.

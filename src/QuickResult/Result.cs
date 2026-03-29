@@ -6,13 +6,13 @@ namespace QuickResult;
 
 /// <summary>
 /// Represents the outcome of an operation that can either succeed with a value
-/// of type <typeparamref name="T"/> or fail with an error message.
+/// of type <typeparamref name="T"/> or fail with an <see cref="IError"/>.
 /// </summary>
 /// <typeparam name="T">Type of the success value.</typeparam>
 public sealed class Result<T>
 {
     private readonly T? _value;
-    private readonly string? _error;
+    private readonly IError? _error;
 
     /// <summary>
     /// Gets a value indicating whether the result represents success.
@@ -36,12 +36,12 @@ public sealed class Result<T>
             : throw new InvalidOperationException("Cannot access Value when result is failure.");
 
     /// <summary>
-    /// Gets the failure error message.
+    /// Gets the failure error.
     /// </summary>
     /// <exception cref="InvalidOperationException">
     /// Thrown when accessed on a success result.
     /// </exception>
-    public string Error =>
+    public IError Error =>
         IsFailure
             ? _error!
             : throw new InvalidOperationException("Cannot access Error when result is success.");
@@ -53,10 +53,11 @@ public sealed class Result<T>
         _error = null;
     }
 
-    private Result(string error)
+    private Result(IError error)
     {
-        if (string.IsNullOrWhiteSpace(error))
-            throw new ArgumentException("Error must not be null or whitespace.", nameof(error));
+        ArgumentNullException.ThrowIfNull(error);
+        if (string.IsNullOrWhiteSpace(error.Message))
+            throw new ArgumentException("Error message must not be null or whitespace.", nameof(error));
         IsSuccess = false;
         _value = default;
         _error = error;
@@ -70,6 +71,19 @@ public sealed class Result<T>
     public static Result<T> Success(T value) => new(value);
 
     /// <summary>
+    /// Creates a failed result containing the specified error.
+    /// </summary>
+    /// <param name="error">The error.</param>
+    /// <returns>A failed <see cref="Result{T}"/> instance.</returns>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown when <paramref name="error"/> is <see langword="null"/>.
+    /// </exception>
+    /// <exception cref="ArgumentException">
+    /// Thrown when the error's message is null, empty, or whitespace.
+    /// </exception>
+    public static Result<T> Failure(IError error) => new(error);
+
+    /// <summary>
     /// Creates a failed result containing the specified error message.
     /// </summary>
     /// <param name="error">The error message.</param>
@@ -77,7 +91,7 @@ public sealed class Result<T>
     /// <exception cref="ArgumentException">
     /// Thrown when <paramref name="error"/> is null, empty, or whitespace.
     /// </exception>
-    public static Result<T> Failure(string error) => new(error);
+    public static Result<T> Failure(string error) => new(new Error(error));
 
     /// <summary>
     /// Returns <paramref name="left"/> when it is successful; otherwise returns <paramref name="right"/>.
@@ -102,30 +116,30 @@ public sealed class Result<T>
     public T ValueOr(T fallback) => IsSuccess ? Value : fallback;
 
     /// <summary>
-    /// Returns the success value when successful; otherwise returns a value produced from the failure message.
+    /// Returns the success value when successful; otherwise returns a value produced from the failure error.
     /// </summary>
-    /// <param name="fallbackFactory">Function that produces a fallback value from the failure message.</param>
+    /// <param name="fallbackFactory">Function that produces a fallback value from the failure error.</param>
     /// <returns>The success value or the value produced by <paramref name="fallbackFactory"/>.</returns>
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="fallbackFactory"/> is <see langword="null"/>.
     /// </exception>
-    public T ValueOr(Func<string, T> fallbackFactory)
+    public T ValueOr(Func<IError, T> fallbackFactory)
     {
         ArgumentNullException.ThrowIfNull(fallbackFactory);
         return IsSuccess ? Value : fallbackFactory(Error);
     }
 
     /// <summary>
-    /// Transforms the failure message using the specified mapper while preserving successes.
+    /// Transforms the failure error using the specified mapper while preserving successes.
     /// </summary>
     /// <param name="mapper">Mapping function applied when this result is failed.</param>
     /// <returns>
-    /// This result unchanged when successful; otherwise a failed result with the mapped error message.
+    /// This result unchanged when successful; otherwise a failed result with the mapped error.
     /// </returns>
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="mapper"/> is <see langword="null"/>.
     /// </exception>
-    public Result<T> MapFailure(Func<string, string> mapper)
+    public Result<T> MapFailure(Func<IError, IError> mapper)
     {
         ArgumentNullException.ThrowIfNull(mapper);
         return IsSuccess ? this : Failure(mapper(Error));
@@ -192,6 +206,14 @@ public static class Result
     /// </summary>
     /// <returns>A successful <see cref="Result{T}"/> with <see cref="Unit"/>.</returns>
     public static Result<Unit> Success() => Result<Unit>.Success(Unit.Value);
+
+    /// <summary>
+    /// Creates a failed result containing the specified error.
+    /// </summary>
+    /// <typeparam name="T">Type of the success value the failure belongs to.</typeparam>
+    /// <param name="error">The error.</param>
+    /// <returns>A failed <see cref="Result{T}"/> instance.</returns>
+    public static Result<T> Failure<T>(IError error) => Result<T>.Failure(error);
 
     /// <summary>
     /// Creates a failed result containing the specified error message.
