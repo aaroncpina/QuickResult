@@ -6,14 +6,14 @@
         <LangVersion>latest</LangVersion>
 
         <!-- Metadata -->
-        <Version>2.0.0</Version>
+        <Version>2.1.0</Version>
         <Authors>Aaron Pina</Authors>
         <Description>Lightweight Result monad for C# with full LINQ query syntax for both sync and async. Mix sync and async steps seamlessly in one query. Zero dependencies.</Description>
         <PackageTags>result;monad;linq;functional;error-handling;async;csharp</PackageTags>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <RepositoryUrl>https://github.com/aaroncpina/QuickResult</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
-        <PackageProjectUrl>https://github.com/aaroncpina/QuickResult</PackageProjectUrl>
+        <PackageProjectUrl>https://quickresult.net</PackageProjectUrl>
 
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <IncludeSymbols>true</IncludeSymbols>
