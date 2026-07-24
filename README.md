@@ -4,7 +4,7 @@ Lightweight `Result<T>` for C# with full LINQ query syntax support for **sync**,
 
 [![NuGet](https://img.shields.io/nuget/v/QuickResult.svg)](https://www.nuget.org/packages/QuickResult)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/QuickResult.svg)](https://www.nuget.org/packages/QuickResult)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/aaroncpina/QuickResult/blob/main/LICENSE)
 
 ---
 
