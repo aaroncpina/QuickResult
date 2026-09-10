@@ -27,7 +27,7 @@ public static class ResultGuardExtensions
     /// </exception>
     public static Result<bool> FailIfTrue(this Result<bool> source, string error)
     {
-        ArgumentNullException.ThrowIfNull(source);
+        Guard.NotNull(source);
         if (source.IsFailure) return Result.Failure<bool>(source.Error);
         return source.Value ? Result.Failure<bool>(error) : source;
     }
@@ -47,7 +47,7 @@ public static class ResultGuardExtensions
     /// </exception>
     public static async Task<Result<bool>> FailIfTrue(this Task<Result<bool>> source, string error)
     {
-        ArgumentNullException.ThrowIfNull(source);
+        Guard.NotNull(source);
         var result = await source.ConfigureAwait(false);
         return result.FailIfTrue(error);
     }
@@ -67,7 +67,7 @@ public static class ResultGuardExtensions
     /// </exception>
     public static Result<bool> FailIfFalse(this Result<bool> source, string error)
     {
-        ArgumentNullException.ThrowIfNull(source);
+        Guard.NotNull(source);
         if (source.IsFailure) return Result.Failure<bool>(source.Error);
         return source.Value ? source : Result.Failure<bool>(error);
     }
@@ -87,7 +87,7 @@ public static class ResultGuardExtensions
     /// </exception>
     public static async Task<Result<bool>> FailIfFalse(this Task<Result<bool>> source, string error)
     {
-        ArgumentNullException.ThrowIfNull(source);
+        Guard.NotNull(source);
         var result = await source.ConfigureAwait(false);
         return result.FailIfFalse(error);
     }

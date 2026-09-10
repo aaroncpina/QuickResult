@@ -55,7 +55,7 @@ public sealed class Result<T>
 
     private Result(IError error)
     {
-        ArgumentNullException.ThrowIfNull(error);
+        Guard.NotNull(error);
         if (string.IsNullOrWhiteSpace(error.Message))
             throw new ArgumentException("Error message must not be null or whitespace.", nameof(error));
         IsSuccess = false;
@@ -125,7 +125,7 @@ public sealed class Result<T>
     /// </exception>
     public T ValueOr(Func<IError, T> fallbackFactory)
     {
-        ArgumentNullException.ThrowIfNull(fallbackFactory);
+        Guard.NotNull(fallbackFactory);
         return IsSuccess ? Value : fallbackFactory(Error);
     }
 
@@ -141,7 +141,7 @@ public sealed class Result<T>
     /// </exception>
     public Result<T> MapFailure(Func<IError, IError> mapper)
     {
-        ArgumentNullException.ThrowIfNull(mapper);
+        Guard.NotNull(mapper);
         return IsSuccess ? this : Failure(mapper(Error));
     }
 
@@ -266,7 +266,7 @@ public static class Result
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="func"/> is null.</exception>
     public static Result<T> Try<T>(Func<T> func)
     {
-        ArgumentNullException.ThrowIfNull(func);
+        Guard.NotNull(func);
         try
         {
             return Success(func());
@@ -291,7 +291,7 @@ public static class Result
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="action"/> is null.</exception>
     public static Result<Unit> Try(Action action)
     {
-        ArgumentNullException.ThrowIfNull(action);
+        Guard.NotNull(action);
         try
         {
             action();
@@ -318,7 +318,7 @@ public static class Result
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="func"/> is null.</exception>
     public static async Task<Result<T>> TryAsync<T>(Func<Task<T>> func)
     {
-        ArgumentNullException.ThrowIfNull(func);
+        Guard.NotNull(func);
         try
         {
             return Success(await func().ConfigureAwait(false));
@@ -343,7 +343,7 @@ public static class Result
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="func"/> is null.</exception>
     public static async Task<Result<Unit>> TryAsync(Func<Task> func)
     {
-        ArgumentNullException.ThrowIfNull(func);
+        Guard.NotNull(func);
         try
         {
             await func().ConfigureAwait(false);
@@ -365,7 +365,7 @@ public static class Result
     /// <returns>A composable pipeline source.</returns>
     public static ResultPipeline<T> From<T>(Func<T> func)
     {
-        ArgumentNullException.ThrowIfNull(func);
+        Guard.NotNull(func);
         return new ResultPipeline<T>(() => Task.FromResult(func()));
     }
 
@@ -377,7 +377,7 @@ public static class Result
     /// <returns>A composable pipeline source.</returns>
     public static ResultPipeline<T> FromAsync<T>(Func<Task<T>> func)
     {
-        ArgumentNullException.ThrowIfNull(func);
+        Guard.NotNull(func);
         return new ResultPipeline<T>(func);
     }
 
@@ -393,7 +393,7 @@ public static class Result
     /// <returns>A composable pipeline source.</returns>
     public static ResultPipeline<T> FromAsync<T>(Func<ConfiguredTaskAwaitable<T>> func)
     {
-        ArgumentNullException.ThrowIfNull(func);
+        Guard.NotNull(func);
         return new ResultPipeline<T>(async () => await func());
     }
 }

@@ -1,0 +1,60 @@
+name: Publish to NuGet
+on:
+  push:
+    branches: [main]
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write   # lets GitHub issue the OIDC token that nuget.org exchanges for a short-lived API key
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read version from csproj
+        id: version
+        run: |
+          VERSION=$(grep -oPm1 '(?<=<Version>)[^<]+' src/QuickResult/QuickResult.csproj)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "csproj version: $VERSION"
+      - name: Check whether version is already on nuget.org
+        id: check
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          # Flat-container index lists every published version of the package (lowercase id).
+          # A 404 means the package has never been published, which also counts as "not present".
+          PUBLISHED=$(curl -sSf https://api.nuget.org/v3-flatcontainer/quickresult/index.json \
+            | grep -o '"[^"]*"' | tr -d '"' || true)
+          if echo "$PUBLISHED" | grep -qx "$VERSION"; then
+            echo "QuickResult $VERSION is already on nuget.org, skipping publish."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "QuickResult $VERSION not found on nuget.org, will publish."
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
+      - name: Test (all target frameworks)
+        run: dotnet test -c Release
+      - name: Pack
+        if: steps.check.outputs.publish == 'true'
+        run: dotnet pack src/QuickResult/QuickResult.csproj -c Release --no-build -o artifacts
+      # Trusted Publishing: no stored API key. nuget.org checks this repo/workflow
+      # against the Trusted Publisher policy on the account and issues a one-hour key.
+      - name: NuGet login (Trusted Publishing)
+        if: steps.check.outputs.publish == 'true'
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: aaron.pina
+
+      - name: Push to NuGet.org
+        if: steps.check.outputs.publish == 'true'
+        run: >
+          dotnet nuget push artifacts/*.nupkg
+          --source https://api.nuget.org/v3/index.json
+          --api-key "${{ steps.login.outputs.NUGET_API_KEY }}"
+          --skip-duplicate

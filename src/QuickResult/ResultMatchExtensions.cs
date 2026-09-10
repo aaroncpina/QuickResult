@@ -28,9 +28,9 @@ public static class ResultMatchExtensions
         Func<T, TResult> onSuccess,
         Func<IError, TResult> onFailure)
     {
-        ArgumentNullException.ThrowIfNull(source);
-        ArgumentNullException.ThrowIfNull(onSuccess);
-        ArgumentNullException.ThrowIfNull(onFailure);
+        Guard.NotNull(source);
+        Guard.NotNull(onSuccess);
+        Guard.NotNull(onFailure);
         return source.IsSuccess ? onSuccess(source.Value) : onFailure(source.Error);
     }
 
@@ -51,9 +51,9 @@ public static class ResultMatchExtensions
         Func<T, Task<TResult>> onSuccess,
         Func<IError, Task<TResult>> onFailure)
     {
-        ArgumentNullException.ThrowIfNull(source);
-        ArgumentNullException.ThrowIfNull(onSuccess);
-        ArgumentNullException.ThrowIfNull(onFailure);
+        Guard.NotNull(source);
+        Guard.NotNull(onSuccess);
+        Guard.NotNull(onFailure);
         return source.IsSuccess ? onSuccess(source.Value) : onFailure(source.Error);
     }
 
@@ -75,9 +75,9 @@ public static class ResultMatchExtensions
         Func<T, Task<TResult>> onSuccess,
         Func<IError, TResult> onFailure)
     {
-        ArgumentNullException.ThrowIfNull(source);
-        ArgumentNullException.ThrowIfNull(onSuccess);
-        ArgumentNullException.ThrowIfNull(onFailure);
+        Guard.NotNull(source);
+        Guard.NotNull(onSuccess);
+        Guard.NotNull(onFailure);
         return source.IsSuccess ? onSuccess(source.Value) : Task.FromResult(onFailure(source.Error));
     }
 
@@ -99,9 +99,9 @@ public static class ResultMatchExtensions
         Func<T, TResult> onSuccess,
         Func<IError, Task<TResult>> onFailure)
     {
-        ArgumentNullException.ThrowIfNull(source);
-        ArgumentNullException.ThrowIfNull(onSuccess);
-        ArgumentNullException.ThrowIfNull(onFailure);
+        Guard.NotNull(source);
+        Guard.NotNull(onSuccess);
+        Guard.NotNull(onFailure);
         return source.IsSuccess ? Task.FromResult(onSuccess(source.Value)) : onFailure(source.Error);
     }
 
@@ -123,9 +123,9 @@ public static class ResultMatchExtensions
         Func<T, Task<TResult>> onSuccess,
         Func<IError, Task<TResult>> onFailure)
     {
-        ArgumentNullException.ThrowIfNull(source);
-        ArgumentNullException.ThrowIfNull(onSuccess);
-        ArgumentNullException.ThrowIfNull(onFailure);
+        Guard.NotNull(source);
+        Guard.NotNull(onSuccess);
+        Guard.NotNull(onFailure);
 
         var result = await source.ConfigureAwait(false);
         return await result.MatchAsync(onSuccess, onFailure).ConfigureAwait(false);
@@ -149,9 +149,9 @@ public static class ResultMatchExtensions
         Func<T, Task<TResult>> onSuccess,
         Func<IError, TResult> onFailure)
     {
-        ArgumentNullException.ThrowIfNull(source);
-        ArgumentNullException.ThrowIfNull(onSuccess);
-        ArgumentNullException.ThrowIfNull(onFailure);
+        Guard.NotNull(source);
+        Guard.NotNull(onSuccess);
+        Guard.NotNull(onFailure);
 
         var result = await source.ConfigureAwait(false);
         return await result.MatchAsync(onSuccess, onFailure).ConfigureAwait(false);
@@ -175,9 +175,9 @@ public static class ResultMatchExtensions
         Func<T, TResult> onSuccess,
         Func<IError, Task<TResult>> onFailure)
     {
-        ArgumentNullException.ThrowIfNull(source);
-        ArgumentNullException.ThrowIfNull(onSuccess);
-        ArgumentNullException.ThrowIfNull(onFailure);
+        Guard.NotNull(source);
+        Guard.NotNull(onSuccess);
+        Guard.NotNull(onFailure);
 
         var result = await source.ConfigureAwait(false);
         return await result.MatchAsync(onSuccess, onFailure).ConfigureAwait(false);
@@ -200,9 +200,9 @@ public static class ResultMatchExtensions
         Func<T, TResult> onSuccess,
         Func<IError, TResult> onFailure)
     {
-        ArgumentNullException.ThrowIfNull(source);
-        ArgumentNullException.ThrowIfNull(onSuccess);
-        ArgumentNullException.ThrowIfNull(onFailure);
+        Guard.NotNull(source);
+        Guard.NotNull(onSuccess);
+        Guard.NotNull(onFailure);
 
         var result = await source.ConfigureAwait(false);
         return result.Match(onSuccess, onFailure);

@@ -326,7 +326,7 @@ var result = await query; // Success(12)
 ## Target Frameworks
 
 - .NET 8+
-- C# 12+
+- .NET Standard 2.0 (.NET Framework 4.7.2+)
 
 ---
 
