@@ -6,10 +6,10 @@
         <LangVersion>latest</LangVersion>
 
         <!-- Metadata -->
-        <Version>2.5.0</Version>
+        <Version>2.5.1</Version>
         <Authors>Aaron Pina</Authors>
-        <Description>Lightweight Result monad for C# with full LINQ query syntax for both sync and async. Mix sync and async steps seamlessly in one query. Zero dependencies.</Description>
-        <PackageTags>result;monad;linq;functional;error-handling;async;csharp</PackageTags>
+        <Description>Lightweight Result&lt;T&gt; type (Result pattern / Result monad) for C# with full LINQ query syntax for sync and async. Mix sync and async steps in one query, match results as a C# union on .NET 10+, and model errors as values instead of exceptions. Zero dependencies.</Description>
+        <PackageTags>result;result-pattern;result-type;monad;either;union;discriminated-union;railway-oriented-programming;linq;functional;error-handling;errors;exceptions;async;csharp;dotnet</PackageTags>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <RepositoryUrl>https://github.com/aaroncpina/QuickResult</RepositoryUrl>
         <RepositoryType>git</RepositoryType>

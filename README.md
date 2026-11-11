@@ -311,6 +311,8 @@ Notes:
 - `IsSuccess`, `Value`, `Error`, `Match` and property patterns such as `result is { IsSuccess: true }` work as before.
 - Under C# 15, patterns on a result test what it holds, so `result is Result<int>` no longer compiles when `result` is already typed `Result<int>`. Matching from `object` (`obj is Result<int> r`) is unaffected.
 
+For the background on C# union types and how `Result<T>` implements them, see [C# union types, and how Result<T> became one](https://quickresult.net/csharp-unions).
+
 ---
 
 ## LINQ Support
