@@ -9,7 +9,7 @@ namespace QuickResult;
 /// of type <typeparamref name="T"/> or fail with an <see cref="IError"/>.
 /// </summary>
 /// <typeparam name="T">Type of the success value.</typeparam>
-public sealed class Result<T>
+public sealed partial class Result<T>
 {
     private readonly T? _value;
     private readonly IError? _error;

@@ -104,6 +104,7 @@ var fail = Result<int>.Failure("Something went wrong"); // just works
 | `Result.From(...)` / `Result.FromAsync(...)` | Start a composable pipeline from sync/async value factories |
 | `pipeline.Try()` | Execute pipeline and convert thrown exceptions into `Failure(...)` |
 | `result.WhenNull(error)` | Convert successful nullable result into `Failure(error)` when null |
+| `result switch { T v => ..., IError e => ... }` | Pattern match the result as a C# union (C# 15, .NET 10+) |
 
 ---
 
@@ -260,6 +261,58 @@ For `Result` pipelines, explicit boolean guards (`FailIfTrue` / `FailIfFalse`) k
 
 ---
 
+## C# Union Support
+
+On .NET 10 and later, `Result<T>` is a C# union of `T` and `IError`. With C# 15 (the .NET 11 SDK) you can match a result by type, and the compiler checks that both cases are handled:
+
+```csharp
+Result<int> result = ParsePositive(input);
+
+string text = result switch
+{
+    int value => $"Got {value}",
+    IError error => $"Failed: {error.Message}"
+};
+
+if (result is IError failure)
+    Console.WriteLine(failure.Message);
+```
+
+Custom error types can have their own arms:
+
+```csharp
+string status = result switch
+{
+    int value => "200",
+    NotFoundError => "404",
+    IError => "500"
+};
+```
+
+A value or an error converts implicitly to a result, so methods can return either directly:
+
+```csharp
+Result<int> ParsePositive(string text)
+{
+    if (int.TryParse(text, out var number) && number > 0)
+        return number;
+
+    return new Error("Not a positive integer");
+}
+```
+
+Notes:
+
+- Matching a value-type result (such as `Result<int>`) does not box.
+- Projects targeting .NET 10 need `<LangVersion>15</LangVersion>` (or `latest`) and the .NET 11 SDK. Projects targeting .NET 11 need nothing extra.
+- A successful result holding `null` matches neither arm; add a `null` arm when `T` is nullable. For the same reason `result is null` is true for such a result, so use `IsSuccess` to tell the two apart.
+- A type pattern cannot tell success from failure when `T` overlaps `IError` (`T` is `IError`, `object`, or an error type): `IError e` also matches a successful value that is an error, and a `T` arm also matches a failure whose error is a `T`. Use `IsSuccess` or `Match` for those.
+- Implicit conversion follows the same overlap: an error assigned to a `Result<object>` becomes a failure, and assigning one to a `Result<IError>` does not compile. `Success(...)` and `Failure(...)` are always unambiguous.
+- `IsSuccess`, `Value`, `Error`, `Match` and property patterns such as `result is { IsSuccess: true }` work as before.
+- Under C# 15, patterns on a result test what it holds, so `result is Result<int>` no longer compiles when `result` is already typed `Result<int>`. Matching from `object` (`obj is Result<int> r`) is unaffected.
+
+---
+
 ## LINQ Support
 
 ### Sync query
@@ -327,6 +380,8 @@ var result = await query; // Success(12)
 
 - .NET 10+
 - .NET Standard 2.0 (.NET Framework 4.7.2+)
+
+C# union support is in the .NET 10+ build only. Projects that resolve the .NET Standard 2.0 build (.NET Framework, .NET 8, .NET 9) keep the rest of the API unchanged.
 
 ---
 
